@@ -2,8 +2,8 @@
 /*mix color  int color = (red << (5 + 6)) | (green << 5) | blue;
 uint16_t red =    tft.color565(255, 0, 0);
 */
-const uint16_t screenWidth = 320;
-const uint16_t screenHeight = 240;
+const uint16_t screenWidth = tft.height();//landscape
+const uint16_t screenHeight = tft.width();
 /*---- METER ------_*
  Type 0:numericMeter
  Type 1:arcMeters
@@ -18,28 +18,8 @@ const uint16_t cell1_y[9] = { 0, 80, 160, 0, 80, 160, 0, 80, 160 };  //cell type
 /*coordinate for each cell type 2 (Vertical bar meter)
 1 , 2 , 3 , 4 */
 const uint16_t cell2_x[4] = { 0, 80, 160, 240 };
+bool blinkCell[9] = {false,false,false,false,false,false,false,false,false};//flag for blinking
 
-
-/* Array data -> { Label , unit, pid, fomula, min, max, ,skip, digit }
-label = Pid label show on meter
-unit = unit for pid
-pid = string pid 0104
-formula = formula no to calculate 
-min = lowest value
-max = highest value
-skip = delay reading 0 - 3; 3 = max delay read
-digit = want to show digit or not
-*/
-const String pidConfig[7][8] = {
-  //[pid][data]
-  { "ENG LOAD", "%", "0104", "2", "0", "100", "0", "0" },    //0 = 0104
-  { "Coolant", "`C", "0105", "1", "0", "120", "3", "0" },     //1 = 0105
-  { "MAP", "psi", "010B", "0", "0", "40", "0", "1" },   //2 = 010B
-  { "ENG SPD", "rpm", "010C", "3", "0", "5000", "0", "0" },  //3 = 010C
-  { "PCM Volt", "volt", "0142", "4", "0", "16", "1", "1" },     //4 = 0142
-  { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0" },    //5 = 015C
-  { "TFT", "`C", "221E1C", "5", "0", "120", "3", "1" }        //6 = 221E1C
-};
 String pidList[maxpidIndex] = {};          //{"0104","0105","010C","010B","010C","0142","015C"}
 uint8_t pidReadSkip[maxpidIndex] = {};     //skip reading 0 - 3; 3 = max delay read
 uint8_t pidCurrentSkip[maxpidIndex] = {};  //current skip counter
@@ -70,13 +50,37 @@ void numericMeter(int cell, byte pid) {
   tft.setTextColor(TFT_WHITE);
   tft.drawCentreString(label, x + w / 2, y + 2, 4);
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
-   tft.drawRightString("---", x + w - 5, y + (h * 0.25) + 11, 6);
+  tft.drawRightString("---", x + w - 5, y + (h * 0.25) + 11, 6);
 
 }  //numericMeter
 /*---------------------------*/
 //plot number on digital Meter
-void plotNumeric(int cell, float data, bool digit) {
-  if (data != old_data[pidIndex]) {//if value change then redraw new data
+void plotNumeric(int cell, float data, int warn, bool digit) {
+  int  compare = warn/data;//compare data and warn
+  if (compare == 0) {//warning
+    int w = screenWidth / 2 - 1;
+    int h = screenHeight / 3 - 1;
+    int x = cell1_x[cell - 1];
+    int y = cell1_y[cell - 1];
+    if (blinkCell[cell]) {//show
+      String result = String(data, digit);
+      switch (result.length()) {
+        case 2: result = "    " + result; break;
+        case 3: result = "   " + result; break;
+        case 4: result = "  " + result; break;
+      }//switch
+      old_data[pidIndex] = data;//update old data
+      tft.setTextColor(TFT_RED, TFT_BLACK);//red color font
+      tft.drawRightString(result.c_str(), x + w - 5, y + (h * 0.25) + 11, 6);
+  
+    }  else {//hiding make blinking effect
+      tft.fillRect(x + 2, y + 28, w - 5, 50, TFT_BLACK);//delete old number
+    } 
+    blinkCell[cell] = !blinkCell[cell];
+  
+  } else {//no warning
+
+    if (data != old_data[pidIndex]) {//if value change then redraw new data
      int w = screenWidth / 2 - 1;
      int h = screenHeight / 3 - 1;
      int x = cell1_x[cell - 1];
@@ -87,11 +91,12 @@ void plotNumeric(int cell, float data, bool digit) {
      case 2: result = "    " + result; break;
      case 3: result = "   " + result; break;
      case 4: result = "  " + result; break;
-    }
-   tft.setTextColor(TFT_GREEN, TFT_BLACK);
-   tft.drawRightString(result.c_str(), x + w - 5, y + (h * 0.25) + 11, 6);
-   old_data[pidIndex] = data;//update old data
-  } //if nothing changed then skip
+    }//if data
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);//green color font
+    tft.drawRightString(result.c_str(), x + w - 5, y + (h * 0.25) + 11, 6);
+    old_data[pidIndex] = data;//update old data
+    } //if nothing changed then skip
+  }//if warn/data == 0
 }
 
 // ##########################
@@ -130,8 +135,7 @@ void arcMeter(int cell, byte pid) {
   }
 }
 // #########################################################################
-void plotArc(int cell, String label, float data, int min, int max, bool digit) {
-
+void plotArc(int cell, String label, float data, int warn, int min, int max, bool digit) {
 if (data != old_data[pidIndex]) {
   //int w = screenWidth / 2 - 1;
   //int h = screenHeight / 3 - 1;
@@ -144,14 +148,21 @@ if (data != old_data[pidIndex]) {
      case 3: result = result+"  "; break;
      case 4: result = result+" "; break;
     }
-  tft.setTextColor(TFT_GREEN,TFT_BLACK);
-  tft.drawString(result.c_str(), x + 10, y + 60, 2);  // data
+  
   if (data < min) data = min;
   if (data > max) data = max;
 
+  int arcColor = TFT_GREEN;
+  int  compare = warn/data;//compare data and warn
+  if (compare == 0) //warning
+     arcColor = TFT_RED;//red font red arc
+  else // no warn
+     arcColor = TFT_GREEN;//gren font green arc
+  tft.setTextColor(arcColor, TFT_BLACK);
+  tft.drawString(result.c_str(), x + 10, y + 60, 2);  // data
   int angle = map(data, min, max, 135, 225);
   if (data >= old_data[pidIndex])//new data > old data -> draw only green arc
-     tft.drawSmoothArc(x + 80, y + 90, 80, 60, 134, angle, TFT_GREEN, TFT_DARKGREY, false);
+     tft.drawSmoothArc(x + 80, y + 90, 80, 60, 134, angle, arcColor, TFT_DARKGREY, false);
   else //new data < old data -> draw only white arc
      tft.drawSmoothArc(x + 80, y + 90, 80, 60, angle + 1, 226, TFT_WHITE, TFT_DARKGREY, false);
   old_data[pidIndex] = data;//update old data
@@ -205,19 +216,26 @@ void vBarMeter(int cell, byte pid) {
 }  //drawLinerVmeter
 /*-------------------*/
 //vertical meter cell 1 to 4 full screen height
-void plotVBar(int cell, float data, int min, int max, bool digit) {  //cell 1-4
+void plotVBar(int cell, float data, int warn, int min, int max, bool digit) {  //cell 1-4
 if (data != old_data[pidIndex]) {//if value change then redraw new data
   int x = cell2_x[cell - 1];
   int w = screenWidth / 4;
   if (data < min) data = min;
   if (data > max) data = max;
+  int barColor = TFT_GREEN;
+  int  compare = warn/data;//compare data and warn
+  if (compare == 0) //warning
+     barColor = TFT_RED;//red bar red font
+  else // no warn
+     barColor = TFT_GREEN;//green bar green font
   //draw new bar
   int barH = map(data, min, max, 0, 182);
   if (data > old_data[pidIndex]) //new data > old data -> draw red bar
-    tft.fillRectVGradient(x + 5, 212 - barH, 20, barH, TFT_RED, 0x8000);//lower
+    tft.fillRectVGradient(x + 5, 212 - barH, 20, barH, barColor, 0x8000);//lower
   else //new data < old data -> draw black bar
     tft.fillRect(x + 5, 29, 20, 183 - barH, TFT_BLACK);  //upper
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);              //draw text
+
+  tft.setTextColor(barColor, TFT_BLACK);//draw text
   String result = String(data, digit);
   switch (result.length()) {
     case 2: result = "   " + result + "   "; break;
@@ -353,12 +371,17 @@ void engine_onoff(int data, byte pid) {  //use engine load
     else
        engine_off_count = 0;  //reset
     if (engine_off_count > 20) {  //engine is stop
-      //tft.pushImage(0,0,320,240,charcoal);//show my image
-      show_spiffs_jpeg_image("/mypic.jpg", 0, 0);
-      ledcWriteTone(buzzerChannel, 1500);
+      if(pref.getUShort("layout",false) != layout) {//if current layout not NVR load layout
+         pref.putUShort("layout", layout);//save current layout to NVR
+      }      
+      show_spiffs_jpeg_image("/mypic.jpg", 0, 0);//show mypic
+      ledcWriteTone(buzzerChannel, 1500);//beep
       delay(500);
       ledcWriteTone(buzzerChannel, 0);
-      delay(1000);
+      for (int i=255;i>0;i--) {//fading effect
+       ledcWrite(backlightChannel, i);//full bright
+       delay(10);
+      }//turn off backlight
       tft.fillScreen(TFT_BLACK);
       tft.writecommand(0x10); //TFT sleep
       esp_deep_sleep_start();//sleep shutdown backlight auto off with esp32
@@ -376,6 +399,7 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
   int min = pidConfig[pidInCell[layout][pidNo]][4].toInt();
   int max = pidConfig[pidInCell[layout][pidNo]][5].toInt();
   bool digit = pidConfig[pidInCell[layout][pidNo]][7].toInt();
+  int warn = pidConfig[pidInCell[layout][pidNo]][8].toInt();
 
   getAB(response);  //get AB
   float data = 0.0;
@@ -397,12 +421,12 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     █ 2 █ █ 8 █ 
     █ 3 █ █ 9 █ */
         switch (pidNo) {
-          case 0: plotArc(1, label, data, min, max, digit); break;
-          case 1: plotArc(2, label, data, min, max, digit); break;
-          case 2: plotArc(3, label, data, min, max, digit); break;
-          case 3: plotNumeric(7, data, digit); break;
-          case 4: plotNumeric(8, data, digit); break;
-          case 5: plotNumeric(9, data, digit); break;
+          case 0: plotArc(1, label, data, warn, min, max, digit); break;
+          case 1: plotArc(2, label, data, warn, min, max, digit); break;
+          case 2: plotArc(3, label, data, warn, min, max, digit); break;
+          case 3: plotNumeric(7, data, warn, digit); break;
+          case 4: plotNumeric(8, data, warn, digit); break;
+          case 5: plotNumeric(9, data, warn, digit); break;
           case 6: engine_onoff(data, pidNo); break;
         }
       }  //case 0
@@ -414,11 +438,11 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     █ 2 █  3  4 
     █ 3 █  █  █ */
         switch (pidNo) {
-          case 0: plotNumeric(1, data, digit); break;
-          case 1: plotNumeric(2, data, digit); break;
-          case 2: plotNumeric(3, data, digit); break;
-          case 3: plotVBar(3, data, min, max, digit); break;
-          case 4: plotVBar(4, data, min, max, digit); break;
+          case 0: plotNumeric(1, data, warn, digit); break;
+          case 1: plotNumeric(2, data, warn, digit); break;
+          case 2: plotNumeric(3, data, warn, digit); break;
+          case 3: plotVBar(3, data, warn, min, max, digit); break;
+          case 4: plotVBar(4, data, warn,  min, max, digit); break;
           case 5: engine_onoff(data, pidNo); break;
           case 6: engine_onoff(data, pidNo); break;
         }
@@ -431,11 +455,11 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     1  █ 5 █  4
     █  █ 6 █  █ */
         switch (pidNo) {
-          case 0: plotVBar(1, data, min, max, digit); break;
-          case 1: plotNumeric(4, data, digit); break;
-          case 2: plotNumeric(5, data, digit); break;
-          case 3: plotNumeric(6, data, digit); break;
-          case 4: plotVBar(4, data, min, max, digit); break;
+          case 0: plotVBar(1, data, warn,  min, max, digit); break;
+          case 1: plotNumeric(4, data, warn, digit); break;
+          case 2: plotNumeric(5, data, warn, digit); break;
+          case 3: plotNumeric(6, data, warn, digit); break;
+          case 4: plotVBar(4, data, warn,  min, max, digit); break;
           case 5: engine_onoff(data, pidNo); break;
           case 6: engine_onoff(data, pidNo); break;
         }
@@ -448,11 +472,11 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     1  2  █ 8 █
     █  █  █ 9 █ */
         switch (pidNo) {
-          case 0: plotVBar(1, data, min, max, digit); break;
-          case 1: plotVBar(2, data, min, max, digit); break;
-          case 2: plotNumeric(7, data, digit); break;
-          case 3: plotNumeric(8, data, digit); break;
-          case 4: plotNumeric(9, data, digit); break;
+          case 0: plotVBar(1, data, warn,  min, max, digit); break;
+          case 1: plotVBar(2, data, warn,  min, max, digit); break;
+          case 2: plotNumeric(7, data, warn, digit); break;
+          case 3: plotNumeric(8, data, warn, digit); break;
+          case 4: plotNumeric(9, data, warn, digit); break;
           case 5: engine_onoff(data, pidNo); break;
           case 6: engine_onoff(data, pidNo); break;
         }
@@ -465,10 +489,10 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     1  2  3  4
     █  █  █  █  */
         switch (pidNo) {
-          case 0: plotVBar(1, data, min, max, digit); break;
-          case 1: plotVBar(2, data, min, max, digit); break;
-          case 2: plotVBar(3, data, min, max, digit); break;
-          case 3: plotVBar(4, data, min, max, digit); break;
+          case 0: plotVBar(1, data, warn,  min, max, digit); break;
+          case 1: plotVBar(2, data, warn,  min, max, digit); break;
+          case 2: plotVBar(3, data, warn,  min, max, digit); break;
+          case 3: plotVBar(4, data, warn,  min, max, digit); break;
           case 4: engine_onoff(data, pidNo); break;
           case 5: engine_onoff(data, pidNo); break;
           case 6: engine_onoff(data, pidNo); break;

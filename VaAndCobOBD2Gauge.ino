@@ -2,22 +2,19 @@
 - Hardware 2.8" TFT ESP32 LVGL https://www.youtube.com/watch?v=d2OXlVcRYrU
 - Small speaker
 - Small push button
-- Case
+- Aluminium case
+- Micro SD Card
+Partition scheme 1.9MB APP/ 190kB SPIFFS /OTA
+
+NEVER FORGET TO CHANGE MAGIC_BYTE OF FIRMWARE from e9 to f9 (1st byte)
 
 *******  TO DO ***********
-- choose obd2 adaptor from list and save to eeprom
-- load obd2 from eeprom
-*/
 
+*/
 //--- FLAG SETTING ----- for debugging
 //#define TERMINAL //temrinal mode (no gauge)
 //#define SERIAL_DEBUG //to show data in serial port
 //#define SKIP_CONNECTION //skip elm327 BT connection to view meter
-
-/*EEPROM use
-0x00 - Layout page 0-5
-0x01 - Show system FPS & Temp flag
-*/
 
 //Intermal temperature sensor function declaration
 #ifdef __cplusplus
@@ -28,6 +25,8 @@ uint8_t temprature_sens_read();
 }
 #endif
 uint8_t temprature_sens_read();  //declare intermal temperature sensor functio
+
+#define array_length(x) (sizeof(x) / sizeof(x[0])) //macro to calculate array length
 
 //library load
 #include <Preferences.h>//save permanent data
@@ -58,21 +57,40 @@ Preferences pref;//create preference
 TFT_eSPI tft = TFT_eSPI();
 #define TFT_GREY 0x5AEB
 #define LOOP_PERIOD 100 // Display updates every 35 ms
-
+#define CALIBRATION_FILE "/TouchCalData1"//save calibrate file
 
 //ELM327 init
 const String elm327Init[8] = {"ATWS","ATBRD23","ATST0F","ATAT0","ATL0","ATH0","ATSP0","ATE0"};
-uint8_t elm327InitCount = 0;//get number of elm327init command
+const uint8_t elm327InitCount = array_length(elm327Init);//get number of elm327init command
 uint8_t initIndex = 0;//index for current pid
+/*------ PIDS total 7 now -------------------
+Array data -> { Label , unit, pid, fomula, min, max, ,skip, digit, warn }
+label = Pid label show on meter
+unit = unit for pid
+pid = string pid 0104
+formula = formula no to calculate 
+min = lowest value
+max = highest value
+skip = delay reading 0 - 3; 3 = max delay read
+digit = want to show digit or not
+warn = warning value
+*/
+const String pidConfig[7][9] = {
+  //[pid][data]
+  { "ENG LOAD", "%", "0104", "2", "0", "100", "0", "0", "80" },     //0 = 0104
+  { "Coolant", "`C", "0105", "1", "0", "120", "3", "0", "99" },     //1 = 0105
+  { "MAP", "psi", "010B", "0", "0", "40", "0", "1", "35" },         //2 = 010B
+  { "ENG SPD", "rpm", "010C", "3", "0", "5000", "0", "0", "4000" }, //3 = 010C
+  { "PCM Volt", "volt", "0142", "4", "0", "16", "1", "1", "15" },   //4 = 0142
+  { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0", "99" },    //5 = 015C
+  { "TFT", "`C", "221E1C", "5", "0", "120", "3", "1", "99" }        //6 = 221E1C
+};
 
-//$$$$$$$$$$$$$$$$$$$$   User configuration here to change display  >
-/*    layout 0      layout 1       layout 2     layout 3      layout 4
+/*  User configuration here to change display 
+      layout 0      layout 1       layout 2     layout 3      layout 4
     █ 1 █ █ 7 █   █ 1 █  █  █    █  █ 4 █  █   █  █  █ 7 █   █  █  █  █
     █ 2 █ █ 8 █   █ 2 █  3  4    1  █ 5 █  4   1  2  █ 8 █   1  2  3  4
     █ 3 █ █ 9 █   █ 3 █  █  █    █  █ 6 █  █   █  █  █ 9 █   █  █  █  █
-*/
-uint8_t layout = 0;//pidInCelltype 0-4 EEPROM 0x00
-const uint8_t max_layout = 5;//total 5 type of display page
 
 /*set up meter here which pid to use on each cell
 0 - engine load
@@ -91,13 +109,14 @@ const byte pidInCell[5][7] = { //[layout][cellNo]
   {2,0,1,5,6,4,3},//layout 3 -> {MAP,engload,coolant,oiltemp,tft,engload,rpm}
   {1,5,6,4,0,2,3},//layout 4 -> {coolant,oiltemp,tft,pcmvolt,map,engspd}
 };
-//will make configurable over web
-//$$$$$$$$$$$$$$$$$$$$$$$  User configuration here to change display  >
+// User configuration here to change display  >
 
 /*---------------------------*/
 //if NO DATA value will set to 0 to skip reading
+uint8_t layout = 0;//pidInCelltype 0-4 EEPROM 0x00
+const uint8_t max_layout = array_length(pidInCell);//total 5 type of display page
 uint8_t pidIndex = 0;//point to PID List
-const uint8_t maxpidIndex = 7;
+const uint8_t maxpidIndex = array_length(pidConfig);//total 7 pids in picConfig
 bool prompt = false;//bt elm ready flag
 bool skip = false;//pid skip flag
 uint8_t A = 0;//get A
@@ -113,9 +132,10 @@ long holdtime = 0;//hold time for button pressed check
 const char compile_date[] = __DATE__ " - " __TIME__;//get built date and time
 float tempRead = 0.0;//current reading cpu temp
 const int8_t tempOffset = -34;//offset adjustment temp up to each tested esp32
-const uint8_t tempOverheat = 55;//max operating cpu temp 50 c
+const uint8_t tempOverheat = 55;//max operating cpu temp 55c
 bool press = false;// button press flag
 bool showsystem = false; //show fps and temp EEPROM 0x01
+uint8_t pidRead = 0;//counter that hold number of pids been read to check pid/sec
 
 //BLUETOOTH
 String bt_message = "";//bluetooth message buffer
@@ -133,14 +153,60 @@ bool foundOBD2 = false;
 BluetoothSerial BTSerial;//bluetooth serial
 
 /*----------- global function ---------*/
+void touch_calibrate() {//calibrate touch screen
+  uint16_t calData[5];
+  uint8_t calDataOK = 0;
+  // check file system exists
+  if (!SPIFFS.begin()) {
+    Serial.println("Formating file system");
+    SPIFFS.format();
+    SPIFFS.begin();
+  }
+  // check if calibration file exists and size is correct
+  if (SPIFFS.exists(CALIBRATION_FILE)) {
+      File f = SPIFFS.open(CALIBRATION_FILE, "r");
+      if (f) {
+        if (f.readBytes((char *)calData, 14) == 14)
+          calDataOK = 1;
+        f.close();
+      }//if f
+  }
+//if can read calibrate data from spiffs file AND button not push
+  if (calDataOK && (digitalRead(SELECTOR_PIN) == HIGH)) {
+    tft.setTouch(calData); // calibration data valid
+  } else {
+    // data not valid  or press button during start
+    Serial.println("Touch screen calibration...");
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_BLACK, TFT_CYAN);
+    tft.drawCentreString("Touch screen calibration",tft.width()/2,tft.height()/2-10,2);
+    tft.setCursor(20, 0);
+    tft.setTextFont(2);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.println("Touch corners as indicated");
+    tft.setTextFont(1);
+    tft.println();
+    tft.calibrateTouch(calData, TFT_MAGENTA, TFT_BLACK, 15);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.println("Calibration complete!");
+
+    SPIFFS.remove(CALIBRATION_FILE);//Delete if we want to re-calibrate
+    File f = SPIFFS.open(CALIBRATION_FILE, "w");   // store data
+    if (f) {
+      f.write((const unsigned char *)calData, 14);
+      f.close();
+    }//if f
+   }//else calDataOK
+}//touch calibrate
+//------------------------------------------------------------------------------------------
 void checkTemp() { //temperature can read only when BT or Wifi Connected
   if (temprature_sens_read()!= 128) {//skip 128 value read
     tempRead = (temprature_sens_read() - 32) / 1.8 + tempOffset;
     #ifdef SERIAL_DEBUG
     Serial.print(tempRead,1);   //print Celsius temperature and tab
     Serial.println("°c");
-    #endif
-  
+    #endif 
     if (tempRead >= tempOverheat) {
       Serial.printf("Over temperature shutdown at %d°C\n",tempOverheat);
       tft.setTextColor(TFT_WHITE,TFT_RED);
@@ -151,16 +217,15 @@ void checkTemp() { //temperature can read only when BT or Wifi Connected
       tft.fillScreen(TFT_BLACK);
       tft.writecommand(0x10); //TFT sleep
       esp_deep_sleep_start();  //sleep shutdown backlight auto off with esp32
-    } 
+    }//if tempread >= tempoverheat
   }//if temp read = 128  
- 
 }
 /*------------------*/
 //TERMINAL terminal
 void Terminal(String texts,int x,int y,int w,int h) {
-   int max_line = round((h-y)/19.0); 
+   int max_line = round((h-y)/16.0); 
    tft.fillRect(x, y,x+ w,y+ h, TFT_BLACK);
-   tft.setTextColor(TFT_WHITE, TFT_BLACK);
+   tft.setTextColor(TFT_WHITE);
    for (int i=0;i<max_line;i++) {
      if (i<=max_line - 2) {
       line[i] = line[i+1];
@@ -168,9 +233,9 @@ void Terminal(String texts,int x,int y,int w,int h) {
        line[i] = texts;
      } 
       tft.drawString(line[i],x,i*20+y,2);
-   }  
+   }//for
    bt_message = "";//reset bt message   
-}
+} 
 //----------------------------------
 //convert bt address to text
 //{0x00,0x1d,0xa5,0x00,0x12,0x92} -> 00:1d:a5:00:12:92
@@ -182,24 +247,23 @@ String ByteArraytoString(esp_bd_addr_t bt_address) {
        if (nib.length() < 2) 
          nib = "0"+nib;
        txt = txt + nib+":";
-    }
+    }//for
     nib = String(bt_address[ESP_BD_ADDR_LEN+1],HEX);
-    if (nib.length() < 2) 
-         nib = "0"+nib;
+    if (nib.length() < 2) nib = "0"+nib;
     txt = txt + nib;
-    //Terminal(txt,0,20,320,240);
     return txt;
 }
-//---------------------------
+//---- Include Header File ---
 #include "image.h"
 #include "bluetooth.h"
 #include "meter.h"
+#include "starwars.h"
 #include "config.h"
 //---------------------------
-/*###################################*/
+//#### SETUP ########
 void setup(void) {
   //pin configuration
-  analogSetAttenuation(ADC_0db); // 0dB(1.0 ครั้ง) 0~800mV  
+  analogSetAttenuation(ADC_0db); // 0dB(1.0 ครั้ง) 0~800mV   for LDR
   pinMode(LDR_PIN,ANALOG);//ldr analog input read brightness
   pinMode(BUZZER_PIN,OUTPUT);//speaker
   pinMode(SELECTOR_PIN,INPUT_PULLUP);//button
@@ -231,6 +295,7 @@ void setup(void) {
   //init TFT display
   tft.init();
   tft.setRotation(1);//landcape 
+  touch_calibrate();//hold button at start to calibrate touch
   tft.setSwapBytes(true);//to display correct image color
   tft.pushImage(0,0,320,240,vaandcob);//show logo
   delay(3000);
@@ -252,13 +317,11 @@ void setup(void) {
   ledcWrite(backlightChannel,255);//full bright
 
 //init variable
- elm327InitCount = sizeof(elm327Init)/sizeof(elm327Init[0]);//total ELM327 init command
  pref.begin("setting", false);
  /* Create a namespace called "setting" with read/write mode
 {
 layout : UShort 
 showsystem: bool
-
 }*/ 
  layout = pref.getUShort("layout",false);//load layout setting from NVR
  if (layout > max_layout) layout = 0;
@@ -267,11 +330,11 @@ showsystem: bool
 //start bluetooth
   if(!BTSerial.begin("Va&Cob OBDII Gauge", true) ) {
     Serial.println("Bluetooth..error!");
-    Terminal("Bluetooth..error!",0,42,320,230);
+    Terminal("Bluetooth..error!",0,48,320,191);
     abort();
   }else{
     Serial.println("Bluetooth..OK");
-    Terminal("Bluetooth..OK",0,42,320,230);
+    Terminal("Bluetooth..OK",0,48,320,191);
   }
   runtime = millis();
   #ifdef SKIP_CONNECTION
@@ -281,8 +344,6 @@ showsystem: bool
 
 /*###################################*/
 void loop() {
-      
-
 //button press HOLD to config menu
 if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
     if (!press) {
@@ -301,7 +362,6 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
       ledcWriteTone(buzzerChannel,5000);//play click sound
       delay(5);
       ledcWriteTone(buzzerChannel,0);
-      pref.putUShort("layout", layout);//save current layout to NVR
       initScreen();//open meter screen
        //reset variable
       engine_off_count = 0;
@@ -316,7 +376,7 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
       
   }//if press
  
- }//else digitalRead
+}//else digitalRead
 
 //reading Bluetooth
   while (BTSerial.available()>0) {
@@ -329,7 +389,7 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
       #endif 
       #ifdef TERMINAL //for degbugging
       getAB(bt_message);
-      Terminal(bt_message+"->"+String(A)+","+String(B),0,42,320,230);
+      Terminal(bt_message+"->"+String(A)+","+String(B),0,48,320,191);
       #endif
 
       BTSerial.flush();
@@ -348,7 +408,7 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
 
        if (se_message != "") {
          #ifdef TERMINAL
-         Terminal(se_message,0,20,320,240);//display terminal
+         Terminal(se_message,0,48,320,191);//display terminal
          #endif
                   
          BTSerial.print(se_message+"\r");
@@ -390,7 +450,10 @@ if (prompt) {//> request pid
   } else {//read each pid
     #ifdef TERMINAL
     #else
-    if (!skip) updateMeter(pidIndex,bt_message);//update meter screen
+    if (!skip) {
+      updateMeter(pidIndex,bt_message);//update meter screen
+      pidRead++;
+    }
     #endif
     pidIndex++;//point to next pid
     if (pidIndex >= maxpidIndex) {
@@ -398,11 +461,12 @@ if (prompt) {//> request pid
       autoDim();//auto backlight handle
       checkTemp();//check temperature.     
       if (showsystem) {
-        String status = String(1000.0/(millis()-runtime),2)+" fps "+String(tempRead,1)+"`c";
+        String status = String(pidRead*1000.0/(millis()-runtime),0)+" p/s "+String(tempRead,1)+"`c";
         tft.setTextColor(TFT_YELLOW,TFT_BLACK);
-        tft.drawCentreString(status.c_str(),160,0,2);
-        runtime = millis();
+        tft.drawCentreString(status.c_str(),159,0,2);
+        runtime = millis();  
       }//if showsystem
+      pidRead = 0;
       
     }  
     if (pidCurrentSkip[pidIndex] <= 0) {//end of skip loop , go next index 

@@ -1,24 +1,62 @@
 //library load
+
 #include <Update.h>  //
-#include <FS.h>      // SD Card ESP32
+#include <FS.h>      // File System
 #include <SD.h>      // SD Card ESP32
 
 //configuration menu 
-const String menuList[5] = {
-  "Show FPS & Temperature",//toggle show system
+const String menuList[6] = {
+  "Show pid/s & CPU Temp",//toggle show system
   "Load my pic 320x240 px",//load user own pic
   "Update firmware",//update new firmware
+  "Warning setting",//setting warning parameter (warning data, offset temp)
   "About",//about
   "Exit"
   };   
- const String firmware_filename = "/VaAndCobOBD2Gauge.bin";//firmware file 
- const String mypic_filename = "/mypic.jpg";//mypic file
+#define firmware_filename "/VaAndCobOBD2Gauge.bin"//firmware file 
+#define mypic_filename "/mypic.jpg"//mypic file
+#define FORMAT_SPIFFS_IF_FAILED true
  /*------------------*/ 
  void beep() { 
   ledcWriteTone(buzzerChannel,2000);
   delay(500);
   ledcWriteTone(buzzerChannel,0);
  }  
+ void clickSound() {
+  ledcWriteTone(buzzerChannel,5000);
+  delay(5);
+  ledcWriteTone(buzzerChannel,0);
+ } 
+/*--------------------*/
+void setWarning() {
+  const String parameterList[7][2] = {
+    {"- Engine Load"," %  "},
+    {"- Coolant Temperature"," `c  "},
+    {"- Manifold Air Pressure"," psi "},
+    {"- Engine Speed"," rpm "},
+    {"- PCM Voltage"," volt"},
+    {"- Engine Oil Temperature"," `c  "},
+    {"- Transmission Fluid Temperature"," `c  "}
+  };
+  tft.fillRect(0,30,320,180,TFT_BLACK);
+  tft.setTextColor(TFT_WHITE,TFT_BLACK);
+  tft.drawCentreString("[ Warning Setting ]",159,30,2);
+  tft.drawFastHLine(0,50,320,TFT_RED);
+  String txt = "CPU Temperature (overheat "+String(tempOverheat)+"`c) (offset "+String(tempOffset)+"`c)";
+  tft.drawString(txt,0,58,2);
+
+  for (int i = 0;i<7;i++) {
+     tft.drawString(parameterList[i][0],0,74+(i*16),2);//paramter list
+     tft.drawRightString(String(pidConfig[i][8]),285,74+(i*16),2);//warning value
+     tft.drawRightString(parameterList[i][1],319,74+(i*16),2);//unit
+  }
+  
+  
+ // tft.setTextColor(TFT_BLACK,TFT_WHITE);
+  //tft.drawCentreString("[- Press button to exit -]",159,180,2);
+  delay(500);
+
+}
  /*--------------------*/
 void loadMyPic() {
   if(!SD.begin()) {//sdcard not attach
@@ -35,18 +73,21 @@ void loadMyPic() {
       tft.drawCentreString("Micro SD Card Error!",159,120,4);
      
     } else {//good sd card attached
-      if (!SPIFFS.begin(true)) {
+      if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
         Serial.println("Error: SPIFFS failed!");
         tft.setTextColor(TFT_WHITE,TFT_RED);
         tft.drawCentreString("Error: SPIFFS failed!",159,120,4); 
 
       } else {  
+       Serial.println("Deleting...\"mypic.jpg\""); 
+       SPIFFS.remove(mypic_filename);//remove old file first    
       File sourceFile = SD.open(mypic_filename);
       if (sourceFile) {//found file
+         
          File destFile = SPIFFS.open(mypic_filename, FILE_WRITE);
-         Serial.println("Copying...");
+         Serial.println("Copying...\"mypic.jpg\""); 
          tft.setTextColor(TFT_BLACK,TFT_GREEN);
-         tft.drawCentreString("Copying...",159,120,4); 
+         tft.drawCentreString("Copying...\"mypic.jpg\"",159,120,4); 
          static uint8_t buf[512];
          while(sourceFile.read( buf, 512) ) {  
           destFile.write( buf, 512 );//copy file from sdcard to spiffs
@@ -57,10 +98,10 @@ void loadMyPic() {
          show_spiffs_jpeg_image(mypic_filename, 0, 0);
     
         } else {
-        Serial.println(mypic_filename +" not found!");
+        Serial.println("\"mypic.jpg\" not found!");
         tft.pushImage(130,44,60,60,nofile);//show fileicon
         tft.setTextColor(TFT_WHITE,TFT_RED);
-        tft.drawCentreString(mypic_filename + " not found!",159,120,4);
+        tft.drawCentreString("\"mypic.jpg\" not found!",159,120,4);
       }//if sourcefile 
     }//if SPIFFS.begin         
    }//else sccard errror
@@ -129,11 +170,9 @@ void updateFromFS(fs::FS &fs) {
    if (updateBin) {
  
       if(updateBin.isDirectory()){
-         Serial.print(firmware_filename);
-         Serial.println(" is not a file");
+         Serial.println("\"VaandCobOBD2Gauge.bin\" is not a file");
          tft.setTextColor(TFT_WHITE,TFT_RED);
-         String err = firmware_filename + " is not a file";
-         tft.drawCentreString(err,159,120,4);
+         tft.drawCentreString("\"VaandCobOBD2Gauge.bin\" is not a file",159,120,4);
          updateBin.close();
          return;
       }
@@ -192,12 +231,14 @@ void listMenu(uint8_t choice) {
   else tft.pushImage(0,42,25,25,switchoff);//switchon image
   tft.pushImage(0,74,25,25,image);//image
   tft.pushImage(0,106,25,25,cpu);//firmware
-  tft.pushImage(0,138,25,25,about);//about
-  tft.pushImage(0,170,25,25,quit);//exit
-  for (uint8_t i=0;i<5;i++) {
+  tft.pushImage(0,138,25,25,warning);//parameter
+  tft.pushImage(0,170,25,25,about);//about
+  tft.pushImage(159,170,25,25,quit);//exit
+  for (uint8_t i=0;i<6;i++) {
     if (choice == i)  tft.setTextColor(TFT_WHITE,TFT_BLUE);//highlight 
     else  tft.setTextColor(TFT_WHITE,TFT_BLACK); 
-    tft.drawString(menuList[i],32,42 + 32 * i,4);//write menu list
+    if (i<5) tft.drawString(menuList[i],32,42 + 32 * i,4);//write menu list
+    else tft.drawString(menuList[i],191,42 + 32 * (i-1),4);//write menu list
     
   }//for i        
 }
@@ -228,6 +269,7 @@ void configMenu() {//control configuration menu
         } else if (holdtimer - millis() > 3000) {//hold 3 sec enter config menu
           //toggle show system status
           if (select == 0) {
+            beep();
             showsystem = !showsystem;//toggle      
             tft.setTextColor(TFT_WHITE,TFT_BLUE);
             if (showsystem) tft.pushImage(0,42,25,25,switchon);//switchon image
@@ -236,7 +278,8 @@ void configMenu() {//control configuration menu
           } 
           //--> Load my picture
           if (select == 1) {
-           tft.fillRect(0,37,320,170,TFT_BLACK);
+           clickSound(); 
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            loadMyPic();//load pic from sdcard to spiffs
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
            tft.drawCentreString("[- Press button to exit -]",159,180,2);
@@ -256,7 +299,8 @@ void configMenu() {//control configuration menu
 
           //update firmware
           if (select ==2) {
-           tft.fillRect(0,37,320,170,TFT_BLACK);
+           clickSound(); 
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
            tft.drawCentreString("[- Press button to exit -]",159,180,2);
            updateFirmware();
@@ -265,39 +309,68 @@ void configMenu() {//control configuration menu
              checkTemp();
              autoDim();
            }//while 
-           tft.fillRect(0,37,320,170,TFT_BLACK);
+           tft.fillRect(0,30,320,180,TFT_BLACK);
+           listMenu(select);
+          }
+          
+          //parameter setting
+          if (select ==3) {
+            clickSound();
+           tft.fillRect(0,30,320,180,TFT_BLACK);
+           tft.setTextColor(TFT_BLACK,TFT_WHITE);
+           tft.drawCentreString("[- Press button to exit -]",159,180,2);
+           setWarning();
+           while (digitalRead(SELECTOR_PIN) == HIGH) {
+             //wait for button press to exit
+             checkTemp();
+             autoDim();
+
+             uint16_t t_x = 0, t_y = 0; // To store the touch coordinates
+             bool pressed = tft.getTouch(&t_x, &t_y);
+             if (pressed) {
+               Serial.printf("%d - %d\n",t_x,t_y);
+               delay(200);
+             }
+
+           }//while 
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            listMenu(select);
           }
 
+
           //about
-          if (select == 3) {
-           tft.fillRect(0,37,320,170,TFT_BLACK);
+          if (select == 4) {
+           clickSound();
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            tft.setTextColor(TFT_LIGHTGREY,TFT_BLACK);
-           tft.drawString("< Va&Cob OBD2 Gauge >",0,37,2);
+           tft.drawString("Firmware build date",0,37,2);
            tft.drawRightString(compile_date,319,37,2);
            tft.drawFastHLine(0,61,320,TFT_RED);
            tft.drawString("MAP/ENG LOAD/ECT/EOT/TFT/ENG SPD/PCM Volt",0,69,2);
-           String txt = "Auto Dim,OnOff/O็verheat Shutdown "+String(tempOverheat)+"("+String(tempOffset)+")`c";
+           String txt = "Warning, Automatic Dim/OnOff/O็verheat Shutdown";
            tft.drawString(txt,0,85,2);
            tft.drawString("* FW-\"VaandCobOBD2Gauge.bin\" / Image-\"mypic.jpg\"",0,101,2);
 
-           tft.drawString("* Email : ahmlite@hotmail.com",0,133,2);
+           //tft.drawString("* Email : ahmlite@hotmail.com",0,133,2);
            tft.drawString("* Facebook : www.facebook.com/vaandcob",0,149,2);
          
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
            tft.drawCentreString("[- Press button to exit -]",159,180,2);
            delay(500);
+        
            while (digitalRead(SELECTOR_PIN) == HIGH) {
              //wait for button press to exit
-             checkTemp();
-             autoDim();
-           }//while 
-           tft.fillRect(0,37,320,170,TFT_BLACK);
+             //checkTemp();
+             //autoDim();
+              starwars();
+           }//while  
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            listMenu(select);
           }
           
           //exit
-          if (select == 4) {
+          if (select == 5) {
+            clickSound();
             if (showsystem != currentFlag) {//save to eeprom only when flag changed
              pref.putBool("showsystem", showsystem);//save to NVR
             }            
@@ -307,14 +380,13 @@ void configMenu() {//control configuration menu
            pressed = false;   
           } //if holdtimer > 3000
          delay(250);//delay avoid bounce
+
         } else {//button release
           if (pressed) {//button release
             select++;//next menu
-            if (select == 5) select = 0;
+            if (select == 6) select = 0;
             listMenu(select);//next menu
-            ledcWriteTone(buzzerChannel,5000);
-            delay(5);
-            ledcWriteTone(buzzerChannel,0);
+            clickSound();
             pressed = false;  
             delay(200);
           }//pressed

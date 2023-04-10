@@ -5,7 +5,7 @@ void scanBTdevice() {//scan bluetooth device
    #ifdef SERIAL_DEBUG
    Serial.println("Discovering bluetooth client...");
    #endif
-   Terminal("Scanning for OBDII Adaptor...",0,42,320,230);
+   Terminal("Scanning for OBDII Adaptor...",0,48,320,191);
 
   btDeviceCount = 0;
  // BTScanResults* btDeviceList = BTSerial.getScanResults();  // maybe accessing from different threads!
@@ -36,12 +36,12 @@ void scanBTdevice() {//scan bluetooth device
   }
 
   String txt = "Found "+String(btDeviceCount)+" device(s)";
-  Terminal(txt,0,42,320,230);
+  Terminal(txt,0,48,320,191);
 
   //matching scan obd2 and config obd2
   for (int i=0;i<btDeviceCount;i++) {
     txt = String(i+1)+". "+deviceName[i]+" - "+deviceAddr[i];
-    Terminal(txt,0,42,320,230);//list devices
+    Terminal(txt,0,48,320,191);//list devices
     delay(100)  ;
 
     if (deviceName[i] == client_name) {//match name.
@@ -71,7 +71,7 @@ void scanBTdevice() {//scan bluetooth device
   //connect to obd2
   if (foundOBD2) {
    txt = "Connecting to " + client_name +" - " + ByteArraytoString(client_addr);
-   Terminal(txt,0,42,320,230);
+   Terminal(txt,0,48,320,191);
    #ifdef SERIAL_DEBUG
    Serial.println(txt);
    #endif
@@ -80,7 +80,7 @@ void scanBTdevice() {//scan bluetooth device
    delay(1000);
    digitalWrite(LED_GREEN_PIN, LOW);//green led 
   } else {
-   Terminal("OBDII Adaptor not found!",0,42,320,230);
+   Terminal("OBDII Adaptor not found!",0,48,320,191);
    #ifdef SERIAL_DEBUG
    Serial.println("OBD2 not found");
    #endif
