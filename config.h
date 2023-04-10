@@ -351,7 +351,7 @@ void configMenu() {//control configuration menu
            tft.drawString(txt,0,85,2);
            tft.drawString("* FW-\"VaandCobOBD2Gauge.bin\" / Image-\"mypic.jpg\"",0,101,2);
 
-           //tft.drawString("* Email : ahmlite@hotmail.com",0,133,2);
+           tft.drawString("* Youtube : www.youtube.com/@vacob6494",0,133,2);
            tft.drawString("* Facebook : www.facebook.com/vaandcob",0,149,2);
          
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
