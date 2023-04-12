@@ -379,12 +379,13 @@ void configMenu() {//control configuration menu
            tft.fillRect(286,219,3,16,TFT_WHITE);//+
            tft.fillRect(280,225,16,3,TFT_WHITE);//+
            setWarning(warningMenuIndex,inc_dec);//list menu first
+           delay(500);
            while (digitalRead(SELECTOR_PIN) == HIGH) {//wait for button press to exit
              checkTemp();
              autoDim();
              uint16_t t_x = 0, t_y = 0; // To store the touch coordinates
-             bool pressed = tft.getTouch(&t_x, &t_y);
-             if (pressed && (t_y > 211)) {
+             bool touched = tft.getTouch(&t_x, &t_y);
+             if (touched && (t_y > 211)) {
                clickSound();
                #ifdef SERIAL_DEBUG
                Serial.printf("%d - %d\n",t_x,t_y);
@@ -404,7 +405,7 @@ void configMenu() {//control configuration menu
                setWarning(warningMenuIndex,inc_dec);//update list
                inc_dec = 0;//reset 
         
-             }//if pressed
+             }//if touched
            }//while 
            //exit and save warning data to preference
            pref.putInt("tempOffset",tempOffset);//save tempoffset
