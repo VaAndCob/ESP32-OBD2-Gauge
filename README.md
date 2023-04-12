@@ -1,6 +1,6 @@
 # ESP32-OBD2-Gauge
-Read me
-https://www.youtube.com/watch?v=AFeEi6D1jXoD
+https://youtu.be/PkQaUJbzTNM
+
 This is ESP32 OBD2 Gauge for vehicle that compatible with obd2
 Special made for FORD vehicle
 
