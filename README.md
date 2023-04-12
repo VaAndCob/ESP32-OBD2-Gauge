@@ -34,4 +34,4 @@ TFT - ford transmission fluid temperature (c)
 - Auto screen brightness
 - Change off screen to user screen with micro SDcard
 - Firmware updatable with micro SDcard
-
+-
