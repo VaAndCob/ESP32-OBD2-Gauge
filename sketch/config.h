@@ -101,7 +101,7 @@ void setWarning(int8_t index, int8_t change) {
       }//switch
       tft.drawRightString(result,285,57+(index*16),2);//pid warning value
      }  //if i = 0   
-  delay(400);//touch screen delay
+  delay(300);//touch screen delay
 }
  /*--------------------*/
 void loadMyPic() {
@@ -390,7 +390,7 @@ void configMenu() {//control configuration menu
                Serial.printf("%d - %d\n",t_x,t_y);
                #endif
                if (t_x < 64) {//DEFAULT
-                 tempOffset = defTempOffset;//load default
+                 tempOffset = factoryTempOffset;//load default
                  //read default warning value
                  for (int i=0;i < maxpidIndex; i++) warningValue[i] = pidConfig[i][8];
                }
