@@ -73,7 +73,7 @@ min = lowest value
 max = highest value
 skip = delay reading 0 - 3; 3 = max delay read
 digit = want to show digit or not
-warn = warning value
+warn = default warning value
 */
 const String pidConfig[7][9] = {
   //[pid][data]
@@ -85,7 +85,9 @@ const String pidConfig[7][9] = {
   { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0", "99" },    //5 = 015C
   { "TFT", "`C", "221E1C", "5", "0", "120", "3", "1", "99" }        //6 = 221E1C
 };
-
+//hold warning value
+String warningValue[7] = {"80","99","35","4000","15","99","99"};
+const int8_t defTempOffset = -34;//default offset adjustment temp up to each tested esp32
 /*  User configuration here to change display 
       layout 0      layout 1       layout 2     layout 3      layout 4
     █ 1 █ █ 7 █   █ 1 █  █  █    █  █ 4 █  █   █  █  █ 7 █   █  █  █  █
@@ -131,7 +133,7 @@ long runtime = 0;//to check FPS
 long holdtime = 0;//hold time for button pressed check
 const char compile_date[] = __DATE__ " - " __TIME__;//get built date and time
 float tempRead = 0.0;//current reading cpu temp
-const int8_t tempOffset = -34;//offset adjustment temp up to each tested esp32
+int8_t tempOffset = 0;//offset adjustment temp up to each tested esp32
 const uint8_t tempOverheat = 55;//max operating cpu temp 55c
 bool press = false;// button press flag
 bool showsystem = false; //show fps and temp EEPROM 0x01
@@ -142,7 +144,7 @@ String bt_message = "";//bluetooth message buffer
 String se_message = "";//serial port message buffer
 String deviceName[8] = {"","","","","","","",""};//discoveryBT name
 String deviceAddr[8] = {"","","","","","","",""};//discover BT addr
-int btDeviceCount = 0;
+int btDeviceCount = 0;//discovered bluetooth devices counter
 #define BT_DISCOVER_TIME  5000//bluetooth discoery time
 esp_bd_addr_t client_addr = {0x00,0x00,0x00,0x00,0x00,0x00};//obdII mac addr
 String  client_name = "OBDII";//adaptor name to search
@@ -208,9 +210,9 @@ void checkTemp() { //temperature can read only when BT or Wifi Connected
     Serial.println("°c");
     #endif 
     if (tempRead >= tempOverheat) {
-      Serial.printf("Over temperature shutdown at %d°C\n",tempOverheat);
+      Serial.printf("CPU Overheat Shutdown at %d°C\n",tempOverheat);
       tft.setTextColor(TFT_WHITE,TFT_RED);
-      tft.drawCentreString("Over temperature shutdown!",159,119,4);
+      tft.drawCentreString("CPU Overheat Shutdown!",159,119,4);
       ledcWriteTone(buzzerChannel, 1500);
       delay(3000);
       ledcWriteTone(buzzerChannel, 0);
@@ -221,7 +223,7 @@ void checkTemp() { //temperature can read only when BT or Wifi Connected
   }//if temp read = 128  
 }
 /*------------------*/
-//TERMINAL terminal
+//TERMINAL terminal for debugging display text
 void Terminal(String texts,int x,int y,int w,int h) {
    int max_line = round((h-y)/16.0); 
    tft.fillRect(x, y,x+ w,y+ h, TFT_BLACK);
@@ -260,6 +262,8 @@ String ByteArraytoString(esp_bd_addr_t bt_address) {
 #include "starwars.h"
 #include "config.h"
 //---------------------------
+
+
 //#### SETUP ########
 void setup(void) {
   //pin configuration
@@ -277,7 +281,6 @@ void setup(void) {
   ledcSetup(buzzerChannel, 1500, 10);//buzzer 10 bit
   ledcSetup(backlightChannel, 12000, 8);//backlight 8 bit
   ledcAttachPin(BUZZER_PIN, buzzerChannel);//attach buzzer
- 
  //init communication
   Serial.begin(115200);
   //memory check
@@ -319,14 +322,20 @@ void setup(void) {
 //init variable
  pref.begin("setting", false);
  /* Create a namespace called "setting" with read/write mode
-{
+{ pref.get...(key,default)
 layout : UShort 
 showsystem: bool
+tempOffset : int
+warning value: int
 }*/ 
- layout = pref.getUShort("layout",false);//load layout setting from NVR
+ layout = pref.getUShort("layout",0);//load layout setting from NVR
  if (layout > max_layout) layout = 0;
  showsystem = pref.getBool("showsystem",false);//load showsytem 
-
+ tempOffset = pref.getInt("tempOffset",defTempOffset);//load defaultTempoffset
+ for (int i=0;i < maxpidIndex; i++) {//read warning value from pid name if not found load from default
+   warningValue[i] = pref.getString(pidConfig[i][0].c_str(),pidConfig[i][8]);
+ }
+ 
 //start bluetooth
   if(!BTSerial.begin("Va&Cob OBDII Gauge", true) ) {
     Serial.println("Bluetooth..error!");
@@ -393,7 +402,7 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
       #endif
 
       BTSerial.flush();
-      prompt = true;//pid response ready to translate and display
+      prompt = true;//pid response ready to calculate & display
     }//else inocmingchar
   }
 
@@ -409,32 +418,30 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
        if (se_message != "") {
          #ifdef TERMINAL
          Terminal(se_message,0,48,320,191);//display terminal
-         #endif
-                  
+         #endif                 
          BTSerial.print(se_message+"\r");
          se_message = "";
-         Serial.flush();
-         
-        }
+         Serial.flush();     
+        }//if se_message
 
-      }//else
-  }
+    }//else if incomingChar
+  }//if Serial.available
 
  //init ELM327 
  if (!foundOBD2) {
    scanBTdevice();
    autoDim();//auto backlight handle
-   //checkTemp(); check temp never work if not BT or WIFI connected
+   //checkTemp(); check temp never work if BT or WIFI not connected
   } 
 
-//communicate with ELM  
+//communicate with ELM327
 if (prompt) {//> request pid
-  prompt = false;
+  prompt = false;//no prompt from ELM327
  
-  if (initIndex < elm327InitCount) {//send init ELM at command
-    BTSerial.print(elm327Init[initIndex]+"\r");     
+  if (initIndex < elm327InitCount) {//send init ELM327 AT command
+    BTSerial.print(elm327Init[initIndex]+"\r");//initialize ELM327     
     initIndex++;
-    if (initIndex == elm327InitCount) {
+    if (initIndex == elm327InitCount) {//all init command sent to ELM327
       initScreen();
       //2 shot beep
       ledcWriteTone(buzzerChannel,2000);

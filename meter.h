@@ -1,6 +1,7 @@
-/* Meter display function */
-/*mix color  int color = (red << (5 + 6)) | (green << 5) | blue;
-uint16_t red =    tft.color565(255, 0, 0);
+// All Meters display function 
+/*mix color & specify own color
+int color = (red << (5 + 6)) | (green << 5) | blue;
+uint16_t red = tft.color565(255, 0, 0);
 */
 const uint16_t screenWidth = tft.height();//landscape
 const uint16_t screenHeight = tft.width();
@@ -8,7 +9,6 @@ const uint16_t screenHeight = tft.width();
  Type 0:numericMeter
  Type 1:arcMeters
  Type 2:vBarMeter
- 
 coordinate for each cell (numieric meter & arc meter)
 1 , 4 , 7
 2 , 5 , 8
@@ -23,16 +23,16 @@ bool blinkCell[9] = {false,false,false,false,false,false,false,false,false};//fl
 String pidList[maxpidIndex] = {};          //{"0104","0105","010C","010B","010C","0142","015C"}
 uint8_t pidReadSkip[maxpidIndex] = {};     //skip reading 0 - 3; 3 = max delay read
 uint8_t pidCurrentSkip[maxpidIndex] = {};  //current skip counter
-uint8_t engine_off_count = 0;//counter for sleep
+uint8_t engine_off_count = 0;//counter to indicate engine is off then sleep
 float old_data[maxpidIndex] = {};//keep old data for each gauge to improve speed for pidIndex 0-6
 
-//backlight variable
+//backlight variable average counter
 uint8_t low_count = 0;
 uint8_t high_count = 0; 
 
-// ####################################
-/* draw digital numeric meter  160x80
-// ####################################
+/* ####################################
+ draw digital numeric meter  160x80 px
+####################################
 cell 
 1 , 2 , 3
 4 , 5 , 6
@@ -99,9 +99,9 @@ void plotNumeric(int cell, float data, int warn, bool digit) {
   }//if warn/data == 0
 }
 
-// ##########################
-/* draw analog meter 160x80
-// ##########################
+/* ##########################
+draw analog meter 160x80 px
+ ##########################
 cell 
 1 , 2 , 3
 4 , 5 , 6
@@ -170,8 +170,8 @@ if (data != old_data[pidIndex]) {
 
 }
 /* ######################################
-//draw linear vertical meter 80x240
-// ######################################
+draw linear vertical meter 80x240 px
+######################################
 cell  1 , 2 , 3 , 4 */
 //vertical meter cell 1 to 4 full screen height
 void vBarMeter(int cell, byte pid) {
@@ -399,7 +399,7 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
   int min = pidConfig[pidInCell[layout][pidNo]][4].toInt();
   int max = pidConfig[pidInCell[layout][pidNo]][5].toInt();
   bool digit = pidConfig[pidInCell[layout][pidNo]][7].toInt();
-  int warn = pidConfig[pidInCell[layout][pidNo]][8].toInt();
+  int warn = warningValue[pidInCell[layout][pidNo]].toInt();
 
   getAB(response);  //get AB
   float data = 0.0;
@@ -506,9 +506,7 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
 
 //auto dim backlight function
 void autoDim() {
-
   int light = analogRead(LDR_PIN);//read light
-
   if (light > LIGHT_LEVEL) {//low light
     low_count++;
     if (low_count > 10) {
@@ -536,8 +534,7 @@ void autoDim() {
       }//if dim
     }//if high_count  
     low_count = 0;
-  }
-
+  }//if light > lightlevel
 }//autodim
 //---------------------------
 /*############################################*/

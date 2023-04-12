@@ -1,8 +1,10 @@
- //####################################################################################################
-// Draw a JPEG on the TFT, images will be cropped on the right/bottom sides if they do not fit
-//####################################################################################################
-// This function assumes xpos,ypos is a valid screen coordinate. For convenience images that do not
-// fit totally on the screen are cropped to the nearest MCU size and may leave right/bottom borders.
+ //this header file is for image processing and picture files
+ /*
+ ####################################################################################################
+ Draw a JPEG on the TFT, images will be cropped on the right/bottom sides if they do not fit
+####################################################################################################
+This function assumes xpos,ypos is a valid screen coordinate. For convenience images that do not
+fit totally on the screen are cropped to the nearest MCU size and may leave right/bottom borders.*/
 void jpegRender(int xpos, int ypos) {
 
   //jpegInfo(); // Print information from the JPEG file (could comment this line out)

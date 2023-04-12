@@ -1,38 +1,21 @@
-/* "config.h"
-this header file is for configuration menu
-*/
+//library load
 #include <Update.h>  //
-#include <FS.h>      // File System
+#include <FS.h>      // SD Card ESP32
 #include <SD.h>      // SD Card ESP32
 
 //configuration menu 
 const String menuList[6] = {
-  "Show pid/s & CPU Temp",//toggle show system
+  "Show FPS & Temperature",//toggle show system
   "Load my pic 320x240 px",//load user own pic
   "Update firmware",//update new firmware
   "Warning setting",//setting warning parameter (warning data, offset temp)
   "About",//about
   "Exit"
-  }; 
-//menu list for warning setting
-const String parameterList[8][2] = {
-    {"CPU Overheat Temperature "+String(tempOverheat)+"`c , offset "," `c  "},
-    {"- Engine Load"," %  "},
-    {"- Coolant Temperature"," `c  "},
-    {"- Manifold Air Pressure"," psi "},
-    {"- Engine Speed"," rpm "},
-    {"- PCM Voltage"," volt"},
-    {"- Engine Oil Temperature"," `c  "},
-    {"- Transmission Fluid Temperature"," `c  "}
-  };  
-//increasement and decreasement of each PID  
-const int pidWarnStep[8] = {1,5,1,5,500,1,1,1};
-    
+  };   
 #define firmware_filename "/VaAndCobOBD2Gauge.bin"//firmware file 
 #define mypic_filename "/mypic.jpg"//mypic file
 #define FORMAT_SPIFFS_IF_FAILED true
-
-/*------------------*/ 
+ /*------------------*/ 
  void beep() { 
   ledcWriteTone(buzzerChannel,2000);
   delay(500);
@@ -44,64 +27,63 @@ const int pidWarnStep[8] = {1,5,1,5,500,1,1,1};
   ledcWriteTone(buzzerChannel,0);
  } 
 /*--------------------*/
-//highlight and change warning each menu
-void setWarning(int8_t index, int8_t change) {
-  for (int i = 0;i<maxpidIndex+1;i++) {//draw all pid list
-     tft.setTextColor(TFT_WHITE,TFT_BLACK);
-     tft.drawString(parameterList[i][0],0,57+(i*16),2);//paramter list
-     tft.drawRightString(parameterList[i][1],319,57+(i*16),2);//unit
-     String result = "";
-     if (i == 0)  result = String(tempOffset);
-     else result = warningValue[i-1];
-      switch (result.length()) {//remove indent
-      case 1: result = "   " + result; break;  
-      case 2: result = "  " + result; break;
-      case 3: result = " " + result; break;
-    }//switch
-    tft.drawRightString(result,285,57+(i*16),2);
+void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
+    Serial.printf("Listing directory: %s\r\n", dirname);
+    File root = fs.open(dirname);
+    if(!root){
+        Serial.println("- failed to open directory");
+        return;
+    }
+    if(!root.isDirectory()){
+        Serial.println(" - not a directory");
+        return;
+    }
+    File file = root.openNextFile();
+    while(file){
+        if(file.isDirectory()){
+            Serial.print("  DIR : ");
+            Serial.println(file.name());
+            if(levels){
+                listDir(fs, file.path(), levels -1);
+            }
+        } else {
+            Serial.print("  FILE: ");
+            Serial.print(file.name());
+            Serial.print("\tSIZE: ");
+            Serial.println(file.size());
+        }
+        file = root.openNextFile();
+    }
+}
+/*--------------------------------*/
+void setWarning() {
+  const String parameterList[7][2] = {
+    {"- Engine Load"," %  "},
+    {"- Coolant Temperature"," `c  "},
+    {"- Manifold Air Pressure"," psi "},
+    {"- Engine Speed"," rpm "},
+    {"- PCM Voltage"," volt"},
+    {"- Engine Oil Temperature"," `c  "},
+    {"- Transmission Fluid Temperature"," `c  "}
+  };
+  tft.fillRect(0,30,320,180,TFT_BLACK);
+  tft.setTextColor(TFT_WHITE,TFT_BLACK);
+  tft.drawCentreString("[ Warning Setting ]",159,30,2);
+  tft.drawFastHLine(0,50,320,TFT_RED);
+  String txt = "CPU Temperature (overheat "+String(tempOverheat)+"`c) (offset "+String(tempOffset)+"`c)";
+  tft.drawString(txt,0,58,2);
+
+  for (int i = 0;i<7;i++) {
+     tft.drawString(parameterList[i][0],0,74+(i*16),2);//paramter list
+     tft.drawRightString(String(pidConfig[i][8]),285,74+(i*16),2);//warning value
+     tft.drawRightString(parameterList[i][1],319,74+(i*16),2);//unit
   }
+  
+  
+ // tft.setTextColor(TFT_BLACK,TFT_WHITE);
+  //tft.drawCentreString("[- Press button to exit -]",159,180,2);
+  delay(500);
 
-    tft.setTextColor(TFT_BLACK,TFT_YELLOW);//highlight yellow
-    //update number on screen
-    if (index == 0)  {//cpu overheat
-      int min = -34;
-      int max = 0;
-      if (change == -1) {//decrease
-        tempOffset = tempOffset - pidWarnStep[index];
-        if (tempOffset < min) tempOffset = min;          
-      }
-      if (change == 1) {//incrase
-        tempOffset = tempOffset + pidWarnStep[index];
-        if (tempOffset > max) tempOffset = max;
-      }
-      String result = String(tempOffset);
-      switch (result.length()) {
-      case 1: result = "   " + result; break;  
-      case 2: result = "  " + result; break;
-      case 3: result = " " + result; break;
-      }//switch
-      tft.drawRightString(result,285,57+(index*16),2);//cpu offset
-    } else {//other pid
-
-      int min = pidConfig[index-1][4].toInt();//get min
-      int max = pidConfig[index-1][5].toInt();//get max
-      if (change == -1) {//decrease  
-        warningValue[index-1] = String(warningValue[index-1].toInt() - pidWarnStep[index]);
-        if (warningValue[index-1].toInt() < min) warningValue[index-1] = String(min);          
-      }
-      if (change == 1) {//increase
-       warningValue[index-1] = String(warningValue[index-1].toInt() + pidWarnStep[index]);
-        if (warningValue[index-1].toInt() > max) warningValue[index-1] = String(max);
-      }
-      String result = warningValue[index-1];
-      switch (result.length()) {
-      case 1: result = "   " + result; break;   
-      case 2: result = "  " + result; break;
-      case 3: result = " " + result; break;
-      }//switch
-      tft.drawRightString(result,285,57+(index*16),2);//pid warning value
-     }  //if i = 0   
-  delay(400);//touch screen delay
 }
  /*--------------------*/
 void loadMyPic() {
@@ -182,6 +164,11 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
 
      if (Update.end()) {//updaet is done
          if (Update.isFinished()) {
+            SD.remove("/firmware.bin");//delete file
+            #ifdef SERIAL_DEBUG
+            Serial.println("Remove firmware.bin");
+            listDir(SD,"/",0);
+            #endif
             Serial.println("Update Successful... restart");
             tft.setTextColor(TFT_BLACK,TFT_GREEN);
             tft.drawCentreString("Update Successful... restart",159,120,4);  
@@ -193,6 +180,7 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
             Serial.println("Error! Update not finished");
             tft.setTextColor(TFT_WHITE,TFT_RED);
             tft.drawCentreString("Error! Update not finished",159,120,4); 
+
          }
       } else {//update stop during updating
          Serial.println("Error Occurred. Error #: " + String(Update.getError()));
@@ -205,6 +193,7 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
       tft.setTextColor(TFT_WHITE,TFT_RED);
       tft.drawCentreString("Not enough space to load firmware",159,120,4); 
    }
+   SD.remove("/firmware.bin");//delete file
 }
 /*------------------*/
 // check given FS for valid update.bin and perform update if available
@@ -212,41 +201,63 @@ void updateFromFS(fs::FS &fs) {
    Serial.println("Loading firmware...");
    tft.setTextColor(TFT_WHITE,TFT_BLUE);
    tft.drawCentreString("Loading firmware...",159,120,4);
-   File updateBin = fs.open(firmware_filename);
-   if (updateBin) {
- 
-      if(updateBin.isDirectory()){
-         Serial.println("\"VaandCobOBD2Gauge.bin\" is not a file");
-         tft.setTextColor(TFT_WHITE,TFT_RED);
-         tft.drawCentreString("\"VaandCobOBD2Gauge.bin\" is not a file",159,120,4);
-         updateBin.close();
-         return;
-      }
-    
-      size_t updateSize = updateBin.size();
-
+   File orgFile = fs.open(firmware_filename, FILE_READ);
+   if (!orgFile || orgFile.isDirectory()) {
+     Serial.println("Firmware not found!");
+     tft.pushImage(130,44,60,60,nofile);//show fileicon
+     tft.setTextColor(TFT_WHITE,TFT_RED);
+     tft.drawCentreString("Firmware not found!",159,120,4);
+     orgFile.close();
+     return;
+   } else {
+      //build "firmware.bin" check 16 bytes key header file and remove
+     //add 16 bytes to orginal firmware to prevent from copy
+     //must remove first 16 byte first and the rest is original firmware
+    // that can be upload 
+     size_t n;  
+     uint8_t buf[512];
+     uint8_t header[16];
+     File updateBin = SD.open("/firmware.bin", FILE_WRITE);
+    //skip first 16 bytes
+    orgFile.read(header,16);
+    #ifdef SERIAL_DEBUG
+    Serial.println("Read and skip 16 bytes header...");
+    for (int i=0;i<16;i++) {
+      Serial.print(header[i],HEX);
+      Serial.print(" ");
+    }
+    #endif
+    //check correct header
+    //bool correct = true;
+   // Serial.println("Correct Header");
+    #ifdef SERIAL_DEBUG
+    Serial.println("Building firmware.bin");
+    #endif
+    while ((n = orgFile.read(buf, sizeof(buf))) > 0) {//copy file
+      updateBin.write(buf, n);
+    }//while
+    orgFile.close();
+    updateBin.close();
+    //got new firmware.bin file as updateBin save in SDcard
+    #ifdef SERIAL_DEBUG
+    listDir(SD,"/",0);
+    #endif
+    updateBin = SD.open("/firmware.bin");
+    size_t updateSize = updateBin.size();
       if (updateSize > 0) {
          Serial.println("Updating... please wait");
          tft.setTextColor(TFT_WHITE,TFT_BLUE);
          tft.drawCentreString("Updating... please wait",159,120,4);
-         performUpdate(updateBin, updateSize);
+         performUpdate(updateBin, updateSize);//start writing flash
       }
       else {
          Serial.println("Error! file is empty");
          tft.setTextColor(TFT_WHITE,TFT_RED);
-         tft.drawCentreString("Error! file is empty",159,120,4);               
+         tft.drawCentreString("Error! file is empty",159,120,4);   
+         SD.remove("/firmware.bin");            
       }
-      updateBin.close();
-      // whe finished remove the binary from sd card to indicate end of the process
-      fs.remove(firmware_filename);  
-   
-   } else {
-      Serial.println("Firmware not found!");
-      tft.pushImage(130,44,60,60,nofile);//show fileicon
-      tft.setTextColor(TFT_WHITE,TFT_RED);
-      tft.drawCentreString("Firmware not found!",159,120,4);
-   }
-
+    updateBin.close();   
+   } 
 }
 /*------------------*/
 void updateFirmware() {
@@ -286,10 +297,7 @@ void listMenu(uint8_t choice) {
     if (i<5) tft.drawString(menuList[i],32,42 + 32 * i,4);//write menu list
     else tft.drawString(menuList[i],191,42 + 32 * (i-1),4);//write menu list
     
-  }//for i       
-  tft.setTextColor(TFT_YELLOW,TFT_BLACK);
-  tft.drawString("Next Menu -> Press & Release Button",0,207,2);
-  tft.drawString("Select    -> Press & Hold Button",0,223,2);
+  }//for i        
 }
 
 /*----------------*/
@@ -303,7 +311,9 @@ void configMenu() {//control configuration menu
     tft.fillRectVGradient(0, 0, 320, 26, TFT_ORANGE, 0xfc00);
     tft.setTextColor(TFT_BLACK);
     tft.drawCentreString("[---   Configuration Menu   ---]",159,0,4);
-
+    tft.setTextColor(TFT_YELLOW,TFT_BLACK);
+    tft.drawString("Next Menu -> Press & Release Button",0,207,2);
+    tft.drawString("Select    -> Press & Hold Button",0,223,2);
     listMenu(select);
     delay(1000);
 
@@ -314,7 +324,7 @@ void configMenu() {//control configuration menu
           pressed = true;//set press flag
           holdtimer = millis();  
         } else if (holdtimer - millis() > 3000) {//hold 3 sec enter config menu
-          //TOGGLE SHOW SYSTEM STATUS
+          //toggle show system status
           if (select == 0) {
             beep();
             showsystem = !showsystem;//toggle      
@@ -323,7 +333,7 @@ void configMenu() {//control configuration menu
             else tft.pushImage(0,42,25,25,switchoff);//switchon image
          
           } 
-          //LOAD MY PIC
+          //--> Load my picture
           if (select == 1) {
            clickSound(); 
            tft.fillRect(0,30,320,180,TFT_BLACK);
@@ -338,88 +348,54 @@ void configMenu() {//control configuration menu
            tft.fillScreen(TFT_BLACK);//clear screen
            tft.setTextColor(TFT_BLACK,TFT_ORANGE);
            tft.drawCentreString("[---   Configuration Menu   ---]",159,0,4);
-
+           tft.setTextColor(TFT_YELLOW,TFT_BLACK);
+           tft.drawString("Next Menu -> Press & Release Button",0,207,2);
+           tft.drawString("Select    -> Press & Hold Button",0,223,2);
            listMenu(select);
           }
 
-          //UPDATE FIRMWARE
+          //update firmware
           if (select ==2) {
            clickSound(); 
            tft.fillRect(0,30,320,180,TFT_BLACK);
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
-           tft.drawCentreString("[- Press button to SAVE and Exit -]",159,180,2);
+           tft.drawCentreString("[- Press button to exit -]",159,180,2);
            updateFirmware();
            while (digitalRead(SELECTOR_PIN) == HIGH) {
              //wait for button press to exit
              checkTemp();
              autoDim();
            }//while 
-           tft.fillRect(0,30,320,210,TFT_BLACK);
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            listMenu(select);
           }
           
-          //WARNING SETTING
+          //parameter setting
           if (select ==3) {
-           int8_t warningMenuIndex = 0;//index for warning setting
-           int8_t inc_dec = 0;//-1=decrease,0=no change, 1=increase
-           clickSound();
-           tft.fillRect(0,30,320,210,TFT_BLACK);
-           tft.setTextColor(TFT_WHITE,TFT_BLACK);
-           tft.drawCentreString("[ Warning Parameter Setting]",159,30,2);
-           tft.drawFastHLine(0,50,320,TFT_RED);            
-           tft.setTextColor(TFT_WHITE,TFT_RED);
-           tft.drawCentreString("[- Press button to Save & Exit -]",159,190,2);
-           for (int i = 0;i<5;i++) //draw buttons
-               tft.fillRoundRect(i*64,211,60,30,5,TFT_NAVY);
-           tft.setTextColor(TFT_WHITE);    
-           tft.drawCentreString("DEFAULT",31,217,2);//reset
-           tft.drawCentreString("^ PREV",95,217,2);//prev
-           tft.drawCentreString("NEXT v",159,217,2);//next
-           tft.drawCentreString("-",223,206,6);//-
-           tft.fillRect(286,219,3,16,TFT_WHITE);//+
-           tft.fillRect(280,225,16,3,TFT_WHITE);//+
-           setWarning(warningMenuIndex,inc_dec);//list menu first
-           while (digitalRead(SELECTOR_PIN) == HIGH) {//wait for button press to exit
+            clickSound();
+           tft.fillRect(0,30,320,180,TFT_BLACK);
+           tft.setTextColor(TFT_BLACK,TFT_WHITE);
+           tft.drawCentreString("[- Press button to exit -]",159,180,2);
+           setWarning();
+           while (digitalRead(SELECTOR_PIN) == HIGH) {
+             //wait for button press to exit
              checkTemp();
              autoDim();
+
              uint16_t t_x = 0, t_y = 0; // To store the touch coordinates
              bool pressed = tft.getTouch(&t_x, &t_y);
-             if (pressed && (t_y > 211)) {
-               clickSound();
-               #ifdef SERIAL_DEBUG
+             if (pressed) {
                Serial.printf("%d - %d\n",t_x,t_y);
-               #endif
-               if (t_x < 64) {//DEFAULT
-                 tempOffset = defTempOffset;//load default
-                 //read default warning value
-                 for (int i=0;i < maxpidIndex; i++) warningValue[i] = pidConfig[i][8];
-               }
-               if ((t_x >= 64) && (t_x <128)) warningMenuIndex--;//prev
-               if ((t_x >= 128) && (t_x <192)) warningMenuIndex++;//next
-               if ((t_x >= 192) && (t_x <256)) inc_dec = -1;//decrease
-               if ((t_x >= 256) && (t_x <320)) inc_dec = 1;//increase
-               if (warningMenuIndex == maxpidIndex+1) warningMenuIndex = 0;
-               if (warningMenuIndex < 0) warningMenuIndex = maxpidIndex;
+               delay(200);
+             }
 
-               setWarning(warningMenuIndex,inc_dec);//update list
-               inc_dec = 0;//reset 
-        
-             }//if pressed
            }//while 
-           //exit and save warning data to preference
-           pref.putInt("tempOffset",tempOffset);//save tempoffset
-          for (int i=0;i < maxpidIndex; i++) {//save all pid
-            pref.putString(pidConfig[i][0].c_str(),warningValue[i]);          
-          }          
-          tft.setTextColor(TFT_BLACK,TFT_GREEN);
-          tft.drawCentreString("Parameters Saved.",159,120,4); 
-          beep();
-          delay(1000);
-          tft.fillRect(0,30,320,210,TFT_BLACK);
-          listMenu(select);
+           tft.fillRect(0,30,320,180,TFT_BLACK);
+           listMenu(select);
           }
 
-          //ABOUT
+
+          //about
           if (select == 4) {
            clickSound();
            tft.fillRect(0,30,320,180,TFT_BLACK);
@@ -434,17 +410,20 @@ void configMenu() {//control configuration menu
 
            tft.drawString("* Youtube : www.youtube.com/@vacob6494",0,133,2);
            tft.drawString("* Facebook : www.facebook.com/vaandcob",0,149,2);
+         
            tft.setTextColor(TFT_BLACK,TFT_WHITE);
            tft.drawCentreString("[- Press button to exit -]",159,180,2);
            delay(500);
-           while (digitalRead(SELECTOR_PIN) == HIGH) { //wait for button press to exit
-              starwars();//play starwars theme song
-           }//while  
-           tft.fillRect(0,30,320,210,TFT_BLACK);
+           while (digitalRead(SELECTOR_PIN) == HIGH) {
+             //wait for button press to exit
+             checkTemp();
+             autoDim();
+           }//while 
+           tft.fillRect(0,30,320,180,TFT_BLACK);
            listMenu(select);
           }
           
-          //EXIT
+          //exit
           if (select == 5) {
             clickSound();
             if (showsystem != currentFlag) {//save to eeprom only when flag changed
@@ -456,7 +435,7 @@ void configMenu() {//control configuration menu
            pressed = false;   
           } //if holdtimer > 3000
          delay(250);//delay avoid bounce
-       //**********************
+
         } else {//button release
           if (pressed) {//button release
             select++;//next menu

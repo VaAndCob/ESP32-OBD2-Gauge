@@ -1,4 +1,4 @@
-//  Star Wars theme  
+//This header file is for playing STARWARS themem
 
 #define NOTE_B0  31
 #define NOTE_C1  33
