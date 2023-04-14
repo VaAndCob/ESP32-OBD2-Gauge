@@ -1,15 +1,15 @@
 # ESP32-OBD2-Gauge
 This is ESP32 OBD2 Gauge for vehicle that compatible with obd2
 (Special made for FORD vehicle)
-https://youtu.be/PkQaUJbzTNM
+[Youtube]https://youtu.be/PkQaUJbzTNM
 ![My Image](/pictures/layout1.jpeg)
 
-#Software:
+## Software:
 Arduino IDE 2.0.4
 TFT_eSPI with modified library in sketch folder 
 https://github.com/Bodmer/TFT_eSPI
 
-#Hardware
+## Hardware
 - ESP32 TFT2.8 320x240 with touch board. https://www.youtube.com/watch?v=d2OXlVcRYrU
 - A small speaker for mobile phone 1Watt
 - A push button 6x6x5 2 legs
@@ -18,7 +18,7 @@ https://github.com/Bodmer/TFT_eSPI
 - 12v to 5v dc micro usb power regulator module
 - Gauge magnetic stand
 
-#Features:
+## Features:
 - Show vehicle data 7 pids
 MAP - manifold air pressure (PSI)
 PCM - pcm voltage (volt)
