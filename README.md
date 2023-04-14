@@ -35,3 +35,4 @@ TFT - ford transmission fluid temperature (c)
 - Change off screen to user screen with micro SDcard
 - Firmware updatable with micro SDcard
 -
+https://github.com/VaAndCob/ESP32-OBD2-Gauge/blob/main/pictures/layout1.jpeg?raw=true
