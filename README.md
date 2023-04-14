@@ -1,8 +1,8 @@
 # ESP32-OBD2-Gauge
-https://youtu.be/PkQaUJbzTNM
-
 This is ESP32 OBD2 Gauge for vehicle that compatible with obd2
-Special made for FORD vehicle
+(Special made for FORD vehicle)
+https://youtu.be/PkQaUJbzTNM
+![My Image](/pictures/layout1.jpeg)
 
 Software:
 Arduino IDE 2.0.4 + TFT_eSPI 
@@ -35,4 +35,3 @@ TFT - ford transmission fluid temperature (c)
 - Change off screen to user screen with micro SDcard
 - Firmware updatable with micro SDcard
 -
-![My Image](/pictures/layout1.jpeg)
