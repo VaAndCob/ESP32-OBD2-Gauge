@@ -42,7 +42,6 @@ Preferences pref;//create preference
 #define SCA_PIN 21
 #define SCL_PIN 22
 #define ADC_PIN 35
-#define SWITCH_PIN 27
 #define LED_RED_PIN 4
 #define LED_GREEN_PIN 16
 #define LED_BLUE_PIN 17
