@@ -332,7 +332,7 @@ void configMenu() {//control configuration menu
            tft.drawCentreString("[- Press button to exit -]",159,180,2);
            while (digitalRead(SELECTOR_PIN) == HIGH) {
              //wait for button press to exit
-             checkTemp();
+             checkCPUTemp();
              autoDim();
            }//while 
            tft.fillScreen(TFT_BLACK);//clear screen
@@ -351,7 +351,7 @@ void configMenu() {//control configuration menu
            updateFirmware();
            while (digitalRead(SELECTOR_PIN) == HIGH) {
              //wait for button press to exit
-             checkTemp();
+             checkCPUTemp();
              autoDim();
            }//while 
            tft.fillRect(0,30,320,210,TFT_BLACK);
@@ -381,7 +381,7 @@ void configMenu() {//control configuration menu
            setWarning(warningMenuIndex,inc_dec);//list menu first
            delay(500);
            while (digitalRead(SELECTOR_PIN) == HIGH) {//wait for button press to exit
-             checkTemp();
+             checkCPUTemp();
              autoDim();
              uint16_t t_x = 0, t_y = 0; // To store the touch coordinates
              bool touched = tft.getTouch(&t_x, &t_y);
@@ -469,7 +469,7 @@ void configMenu() {//control configuration menu
           }//pressed
 
       }//if press&& digitalread
-      checkTemp();
+      checkCPUTemp();
       autoDim();
     
     } //while     

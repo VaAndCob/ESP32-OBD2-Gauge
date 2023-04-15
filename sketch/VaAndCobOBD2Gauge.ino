@@ -86,14 +86,14 @@ const String pidConfig[7][9] = {
 };
 //hold warning value
 String warningValue[7] = {"80","99","35","4000","15","99","99"};
-const int8_t defTempOffset = -34;//default offset adjustment temp up to each tested esp32
+const int8_t factoryTempOffset = -34;//default offset adjustment temp up to each tested esp32
 /*  User configuration here to change display 
       layout 0      layout 1       layout 2     layout 3      layout 4
     █ 1 █ █ 7 █   █ 1 █  █  █    █  █ 4 █  █   █  █  █ 7 █   █  █  █  █
     █ 2 █ █ 8 █   █ 2 █  3  4    1  █ 5 █  4   1  2  █ 8 █   1  2  3  4
     █ 3 █ █ 9 █   █ 3 █  █  █    █  █ 6 █  █   █  █  █ 9 █   █  █  █  █
 
-/*set up meter here which pid to use on each cell
+set up meter here which pid to use on each cell
 0 - engine load
 1 - coolant
 2 - manifold Pressure
@@ -124,6 +124,7 @@ uint8_t A = 0;//get A
 uint8_t B = 0;//get B
 
 //general variable
+const uint32_t SLEEP_DURATION = 180 * 1000000; //180 sec* us = 3 min
 uint32_t updateTime = 3;// time for next update
 String line[12] = {"","","","","","","","","","","",""};//buffer for each line in terminal function
 bool    dim = false;//back light dim flag
@@ -152,7 +153,10 @@ esp_spp_role_t role=ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
 bool foundOBD2 = false;
 
 BluetoothSerial BTSerial;//bluetooth serial
+//---- Include Header File ---
+#include "image.h"
 
+//---------------------------
 /*----------- global function ---------*/
 void touch_calibrate() {//calibrate touch screen
   uint16_t calData[5];
@@ -201,7 +205,7 @@ void touch_calibrate() {//calibrate touch screen
    }//else calDataOK
 }//touch calibrate
 //------------------------------------------------------------------------------------------
-void checkTemp() { //temperature can read only when BT or Wifi Connected
+void checkCPUTemp() { //temperature can read only when BT or Wifi Connected
   if (temprature_sens_read()!= 128) {//skip 128 value read
     tempRead = (temprature_sens_read() - 32) / 1.8 + tempOffset;
     #ifdef SERIAL_DEBUG
@@ -210,13 +214,22 @@ void checkTemp() { //temperature can read only when BT or Wifi Connected
     #endif 
     if (tempRead >= tempOverheat) {
       Serial.printf("CPU Overheat Shutdown at %d°C\n",tempOverheat);
-      tft.setTextColor(TFT_WHITE,TFT_RED);
-      tft.drawCentreString("CPU Overheat Shutdown!",159,119,4);
+      tft.fillRectVGradient(0, 0, 320, 240, TFT_RED, 0x8000);
+      tft.pushImage(127,5,64,64,overheat);//show sdcard icon
+      tft.setTextColor(TFT_WHITE);
+      tft.drawCentreString("CPU Overheat Shutdown!",159,75,4);
+      tft.setTextColor(TFT_WHITE,TFT_BLUE);
+      tft.drawCentreString("Auto-restart within 3 minutes",159,140,4);
+       tft.drawCentreString("OR",159,170,4);
+      tft.drawCentreString("Press button to restart",159,200,4);
       ledcWriteTone(buzzerChannel, 1500);
-      delay(3000);
+      delay(5000);
       ledcWriteTone(buzzerChannel, 0);
       tft.fillScreen(TFT_BLACK);
       tft.writecommand(0x10); //TFT sleep
+      //enter deep sleep
+      esp_sleep_enable_timer_wakeup(SLEEP_DURATION);//sleep timer 3 min
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_27,LOW); //wake when button pressed
       esp_deep_sleep_start();  //sleep shutdown backlight auto off with esp32
     }//if tempread >= tempoverheat
   }//if temp read = 128  
@@ -237,32 +250,13 @@ void Terminal(String texts,int x,int y,int w,int h) {
    }//for
    bt_message = "";//reset bt message   
 } 
-//----------------------------------
-//convert bt address to text
-//{0x00,0x1d,0xa5,0x00,0x12,0x92} -> 00:1d:a5:00:12:92
-String ByteArraytoString(esp_bd_addr_t bt_address) {
-  String txt = "";
-  String nib = "";
-    for (int i=0;i<ESP_BD_ADDR_LEN+1;i++) {
-       nib = String(bt_address[i],HEX);
-       if (nib.length() < 2) 
-         nib = "0"+nib;
-       txt = txt + nib+":";
-    }//for
-    nib = String(bt_address[ESP_BD_ADDR_LEN+1],HEX);
-    if (nib.length() < 2) nib = "0"+nib;
-    txt = txt + nib;
-    return txt;
-}
 //---- Include Header File ---
-#include "image.h"
+//#include "image.h"
 #include "bluetooth.h"
 #include "meter.h"
 #include "starwars.h"
 #include "config.h"
 //---------------------------
-
-
 //#### SETUP ########
 void setup(void) {
   //pin configuration
@@ -330,7 +324,7 @@ warning value: int
  layout = pref.getUShort("layout",0);//load layout setting from NVR
  if (layout > max_layout) layout = 0;
  showsystem = pref.getBool("showsystem",false);//load showsytem 
- tempOffset = pref.getInt("tempOffset",defTempOffset);//load defaultTempoffset
+ tempOffset = pref.getInt("tempOffset",0);//load defaultTempoffset
  for (int i=0;i < maxpidIndex; i++) {//read warning value from pid name if not found load from default
    warningValue[i] = pref.getString(pidConfig[i][0].c_str(),pidConfig[i][8]);
  }
@@ -430,7 +424,7 @@ if (digitalRead(SELECTOR_PIN) == LOW) {//button pressed
  if (!foundOBD2) {
    scanBTdevice();
    autoDim();//auto backlight handle
-   //checkTemp(); check temp never work if BT or WIFI not connected
+   //checkCPUTemp(); check temp never work if BT or WIFI not connected
   } 
 
 //communicate with ELM327
@@ -458,14 +452,14 @@ if (prompt) {//> request pid
     #else
     if (!skip) {
       updateMeter(pidIndex,bt_message);//update meter screen
-      pidRead++;
+      pidRead++;//for calculate pid/s
     }
     #endif
     pidIndex++;//point to next pid
     if (pidIndex >= maxpidIndex) {
       pidIndex = 0;//back to pid 0 
       autoDim();//auto backlight handle
-      checkTemp();//check temperature.     
+      checkCPUTemp();//check temperature.     
       if (showsystem) {
         String status = String(pidRead*1000.0/(millis()-runtime),0)+" p/s "+String(tempRead,1)+"`c";
         tft.setTextColor(TFT_YELLOW,TFT_BLACK);

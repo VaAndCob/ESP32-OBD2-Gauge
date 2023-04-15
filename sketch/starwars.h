@@ -147,7 +147,7 @@ static void starwars() {
     delay(pauseBetweenNotes);
     ledcWriteTone(buzzerChannel,0);
 
-    checkTemp();
+    checkCPUTemp();
     autoDim();
     if (digitalRead(SELECTOR_PIN) == LOW) return;
   }

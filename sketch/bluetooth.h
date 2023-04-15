@@ -1,4 +1,21 @@
 /* Bluetooth function */
+//----------------------------------
+//convert bt address to text
+//{0x00,0x1d,0xa5,0x00,0x12,0x92} -> 00:1d:a5:00:12:92
+String ByteArraytoString(esp_bd_addr_t bt_address) {
+  String txt = "";
+  String nib = "";
+    for (int i=0;i<ESP_BD_ADDR_LEN+1;i++) {
+       nib = String(bt_address[i],HEX);
+       if (nib.length() < 2) 
+         nib = "0"+nib;
+       txt = txt + nib+":";
+    }//for
+    nib = String(bt_address[ESP_BD_ADDR_LEN+1],HEX);
+    if (nib.length() < 2) nib = "0"+nib;
+    txt = txt + nib;
+    return txt;
+}
 /*=======================*/
 void scanBTdevice() {//scan bluetooth device
    digitalWrite(LED_BLUE_PIN,LOW);//blue led on
