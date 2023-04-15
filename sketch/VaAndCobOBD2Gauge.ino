@@ -214,8 +214,8 @@ void checkCPUTemp() { //temperature can read only when BT or Wifi Connected
     #endif 
     if (tempRead >= tempOverheat) {
       Serial.printf("CPU Overheat Shutdown at %d°C\n",tempOverheat);
-      tft.fillRectVGradient(0, 0, 320, 240, TFT_RED, 0x8000);
-      tft.pushImage(127,5,64,64,overheat);//show sdcard icon
+      tft.fillRectVGradient(0, 0, 320, 240, TFT_RED, TFT_BLACK);
+      tft.pushImage(127,5,64,64,overheat,TFT_RED);//show sdcard icon
       tft.setTextColor(TFT_WHITE);
       tft.drawCentreString("CPU Overheat Shutdown!",159,75,4);
       tft.setTextColor(TFT_WHITE,TFT_BLUE);
