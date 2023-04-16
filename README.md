@@ -20,13 +20,13 @@ https://github.com/Bodmer/TFT_eSPI
 
 ## Features:
 - Show vehicle data 7 pids
-MAP - manifold air pressure (PSI)
-PCM - pcm voltage (volt)
-ENG LOAD - engine load (%)
-ENG SPD - engine speed (RPM)
-Coolant - coolant temperature (c)
-Oil Temp - engine oil temperature (c)
-TFT - ford transmission fluid temperature (c)
+* MAP - manifold air pressure (PSI)
+* PCM - pcm voltage (volt)
+* ENG LOAD - engine load (%)
+* ENG SPD - engine speed (RPM)
+* Coolant - coolant temperature (c)
+* Oil Temp - engine oil temperature (c)
+* TFT - ford transmission fluid temperature (c)
 
 - 5 layout page selectable display
 - Warning when parameter reach setting value
