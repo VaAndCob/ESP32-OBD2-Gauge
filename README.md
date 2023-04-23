@@ -37,3 +37,7 @@ https://github.com/Bodmer/TFT_eSPI
 - Change off screen to user screen with micro SDcard
 - Firmware updatable with micro SDcard
 -
+## License and Credits
+Developed by Connor Nishijima (2018)
+
+Released under the GPLv3 license.
