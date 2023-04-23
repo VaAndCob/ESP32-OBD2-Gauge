@@ -40,4 +40,4 @@ https://github.com/Bodmer/TFT_eSPI
 ## License and Credits
 Developed by Ratthanin W (2023)
 
-Released under the GPLv3 license.
+Released under the [GPLv3 license.](https://www.gnu.org/licenses/gpl-3.0.en.html)
