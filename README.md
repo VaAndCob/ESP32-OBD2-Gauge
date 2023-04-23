@@ -38,6 +38,6 @@ https://github.com/Bodmer/TFT_eSPI
 - Firmware updatable with micro SDcard
 -
 ## License and Credits
-Developed by Connor Nishijima (2018)
+Developed by Ratthanin W (2023)
 
 Released under the GPLv3 license.
