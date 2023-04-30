@@ -14,7 +14,7 @@ https://github.com/Bodmer/TFT_eSPI
 - A small speaker for mobile phone 1Watt
 - A push button 6x6x5 2 legs
 - Aluminium Case Cover
-- ELM327 bluetooth adaptor
+- ELM327 bluetooth adaptor (recommened v1.5 not v2.1)
 - 12v to 5v dc micro usb power regulator module
 - Gauge magnetic stand
 
