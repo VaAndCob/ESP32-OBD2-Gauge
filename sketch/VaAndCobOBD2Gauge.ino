@@ -59,7 +59,7 @@ TFT_eSPI tft = TFT_eSPI();
 #define CALIBRATION_FILE "/TouchCalData1"//save calibrate file
 
 //ELM327 init
-const String elm327Init[8] = {"ATWS","ATBRD23","ATST0F","ATAT0","ATL0","ATH0","ATSP0","ATE0"};
+const String elm327Init[8] = {"ATWS","ATBRD23","ATAT2","ATL0","ATH0","ATSP0","ATE0"};
 const uint8_t elm327InitCount = array_length(elm327Init);//get number of elm327init command
 uint8_t initIndex = 0;//index for current pid
 /*------ PIDS total 7 now -------------------
