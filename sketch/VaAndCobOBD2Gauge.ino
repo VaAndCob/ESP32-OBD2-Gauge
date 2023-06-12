@@ -6,7 +6,6 @@
 - Micro SD Card
 Partition scheme 1.9MB APP/ 190kB SPIFFS /OTA
 
-NEVER FORGET TO CHANGE MAGIC_BYTE OF FIRMWARE from e9 to f9 (1st byte)
 
 *******  TO DO ***********
 
