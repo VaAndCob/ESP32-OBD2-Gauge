@@ -1,0 +1,4 @@
+Replace Update.h and Update.cpp in your arduino ESP32 Update Library here
+
+
+C:\Users\your_account\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Update\src
