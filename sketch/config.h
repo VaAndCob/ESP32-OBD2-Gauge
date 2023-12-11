@@ -167,7 +167,7 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
       //tft.setTextColor(TFT_WHITE,TFT_BLACK);
 
      Update //progress callback
-     .onProgress([](size_t written, size_t total) {
+     .onProgress([฿](size_t written, size_t total) {
       uint16_t progress = written * 100 / total;
       Serial.printf("Progress: %d \n",progress);
       tft.fillRectHGradient(59,67,progress*2,16,TFT_RED,TFT_GREEN);//progressbar 
@@ -177,7 +177,7 @@ void performUpdate(Stream &updateSource, size_t updateSize) {
     }); 
 
     //write firmware from SDCard here
-      size_t written = Update.writeStream(updateSource, updateSize);
+      size_t written = Update.writeStream(updateSource);
       Serial.printf("%d bytes written",written);
 
      if (Update.end()) {//updaet is done
