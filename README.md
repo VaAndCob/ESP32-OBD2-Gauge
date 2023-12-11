@@ -1,5 +1,5 @@
 # ESP32-OBD2-Gauge
-Last Update: Dec 11th, 2023
+Last Update: Dec 11th, 2023.
 
 This is ESP32 OBD2 Gauge for vehicle that compatible with obd2
 (Special made for FORD vehicle)
