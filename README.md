@@ -38,8 +38,5 @@ https://github.com/Bodmer/TFT_eSPI/extension
 - Auto screen brightness
 - Change off screen to user screen with micro SDcard
 - Firmware updatable with micro SDcard
--
-## License and Credits
-Developed by Ratthanin W (2023)
 
-Released under the [GPLv3 license.](https://www.gnu.org/licenses/gpl-3.0.en.html)
+## [☕ Buy me coffee](https://www.buymeacoffee.com/vaandcob)
