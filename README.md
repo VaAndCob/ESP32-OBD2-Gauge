@@ -12,7 +12,8 @@ TFT_eSPI with modified library in sketch folder
 https://github.com/Bodmer/TFT_eSPI/extension
 
 ## Hardware
-- ESP32 TFT2.8 320x240 with touch board. https://www.youtube.com/watch?v=d2OXlVcRYrU
+- ESP32 TFT2.8 320x240 with touch board.
+buy here  https://s.click.aliexpress.com/e/_DB8Ht8N
 - A small speaker for mobile phone 1Watt
 - A push button 6x6x5 2 legs
 - Aluminium Case Cover
