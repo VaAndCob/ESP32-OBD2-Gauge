@@ -34,7 +34,7 @@ buy here  https://s.click.aliexpress.com/e/_DB8Ht8N
 * ENG SPD - engine speed (RPM)
 * Coolant - coolant temperature (c)
 * Oil Temp - engine oil temperature (c)
-* TFT - ford transmission fluid temperature (c)
+* TFT - Ford transmission fluid temperature (c)
 
 - 8 layout page selectable display
 - DTC read and clear function (Engine warning light only)
@@ -45,6 +45,6 @@ buy here  https://s.click.aliexpress.com/e/_DB8Ht8N
 - Auto screen brightness
 - Change off screen to user screen with micro SDcard
 - Firmware updatable (micro SDcard and WiFi)
-- VIN Read in About page.
+- VIN Read on the About page.
 
-## [☕ Buy me coffee](https://www.buymeacoffee.com/vaandcob)
+## [☕ Buy me coffee](https://skrill.me/rq/Ratthanin/3/USD?key=9xxRSRSGTivUI4rPpFKoexxzOLN)
