@@ -1,5 +1,5 @@
 # ESP32-OBD2-Gauge
-Last Update: June 7th, 2004.
+Last Update: June 7th, 2004. A fully functional and commercial code
 
 This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
 (Special made for FORD vehicle)
