@@ -205,7 +205,7 @@
 
 // For ESP32 Dev board (only tested with GC9A01 display)
 // The hardware SPI can be mapped to any pins
-
+//screen
 #define TFT_MOSI 13 // In some display driver board, it might be written as "SDA" and so on.
 #define TFT_MISO 12
 #define TFT_SCLK 14
@@ -214,12 +214,12 @@
 #define TFT_RST  -1  // Reset pin (could connect to Arduino RESET pin)
 #define TFT_BL   21  // LED back-light
 
-#define TOUCH_CS 33     // Chip select pin (T_CS) of touch screen
-#define SOFTSPI		// Uncomment for software SPI
-
-#define TOUCH_MOSI 32
-#define TOUCH_MISO 39
-#define TOUCH_CLK 25
+//touch
+//#define TOUCH_CS 33  use TOUCH_CS to  Inlcude extensions/Touch.h
+//#define TOUCH_MOSI 32
+//#define TOUCH_MISO 39
+//#define TOUCH_CLK 25
+//#define SOFTSPI  //use VSPI for XPT touchscreen
 
 //#define TFT_WR 22    // Write strobe for modified Raspberry Pi TFT only
 
