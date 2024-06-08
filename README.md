@@ -6,7 +6,8 @@ This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
  - Prototype https://youtu.be/PkQaUJbzTNM
  - Current Model Short Demo https://youtu.be/vvBIeim7XTE
  - 
-![My Image](/picture/page.jpg)
+![](/picture/page.jpg)
+![](/picture/config.jpg)
 
 ## Software:
 - Arduino IDE 2.3.2
