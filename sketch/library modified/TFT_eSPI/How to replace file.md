@@ -1,4 +1,6 @@
+TFT_eSPI release 2.5.43
+
 Explore to 
 - C:\...\Arduino\Sketch\libraries\TFT_eSPI
-- rename User_Setup.h to ORG_User_Setup.h (as backup)
-- copy a modified User_Setup.h into TFT_eSPI directory.
+- replace all 3 files into TFT_eSPI folder
+- back up all 3 files is recommended
