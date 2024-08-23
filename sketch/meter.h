@@ -459,6 +459,7 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     case 3: data = (256 * A + B) / 4.0; break;
     case 4: data = (256 * A + B) / 1000.0; break;
     case 5: data = (256 * A + B) / 16.0; break;
+    case 6: data = (256 * A + B) / 8.0; break;
       //more formula
   }  //switch fomula
 

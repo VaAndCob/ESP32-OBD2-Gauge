@@ -4,8 +4,7 @@ Hardware:
 - Hardware 2.8" TFT ESP32 LVGL https://www.youtube.com/watch?v=d2OXlVcRYrU
 Configuration:
 - Partition scheme
-  option 1 Huge APP 3MB /NO OTA (size is too big)
-  option 2 Minimal SPIFFS 1.9MB APP/ 190kB SPIFFS /OTA (for OTA ,must reduce code size)
+  Minimal SPIFFS 1.9MB APP/ 190kB SPIFFS /OTA (for OTA ,must reduce code size)
 
 Important Note:
 - New device must flash "gauge_factory_init.ino" first to get it work by checking 'serialno' in pref.
@@ -84,7 +83,8 @@ const String pidConfig[7][9] = {
   { "ENG Speed", "rpm", "010C", "3", "0", "5000", "0", "0", "4000" }, //3 = 010C
   { "PCM Volt", "volt", "0142", "4", "0", "16", "1", "1", "15" },   //4 = 0142
   { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0", "99" },    //5 = 015C
-  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C
+  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C for FORD T6
+  //{ "Trans Temp", "`C", "221674", "6", "0", "120", "3", "1", "99" } //6 = 221674 for FORD T5
 };
 
 //barometric pressure "0133"  turbo boost = map - bp;
@@ -302,8 +302,9 @@ void setup() {
   //testTouch();//test touchscreen
   
   tft.setSwapBytes(true);//to display correct image color
-  tft.pushImage(0,0,320,240,vaandcob);//show logo
-  delay(3000);
+  //tft.pushImage(0,0,320,240,vaandcob);//show logo
+  tft.pushImage(135,100,100,50,futurecar);
+  //delay(3000);
   //backlight ledcAttachPin must be set after tft.init()
   ledcAttachPin(TFT_BL, backlightChannel);//attach backlight
   for (uint8_t i=255;i>0;i--) {//fading effect
