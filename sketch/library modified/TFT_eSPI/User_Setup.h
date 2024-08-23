@@ -215,10 +215,10 @@
 #define TFT_BL   21  // LED back-light
 
 //touch
-//#define TOUCH_CS 33  use TOUCH_CS to  Inlcude extensions/Touch.h
-//#define TOUCH_MOSI 32
-//#define TOUCH_MISO 39
-//#define TOUCH_CLK 25
+#define TOUCH_CS 33  //use TOUCH_CS to  Inlcude extensions/Touch.h
+#define TOUCH_MOSI 32
+#define TOUCH_MISO 39
+#define TOUCH_CLK 25
 //#define SOFTSPI  //use VSPI for XPT touchscreen
 
 //#define TFT_WR 22    // Write strobe for modified Raspberry Pi TFT only
@@ -306,11 +306,11 @@
 #define LOAD_FONT7  // Font 7. 7 segment 48 pixel font, needs ~2438 bytes in FLASH, only characters 1234567890:-.
 #define LOAD_FONT8  // Font 8. Large 75 pixel font needs ~3256 bytes in FLASH, only characters 1234567890:-.
 //#define LOAD_FONT8N // Font 8. Alternative to Font 8 above, slightly narrower, so 3 digits fit a 160 pixel TFT
-#define LOAD_GFXFF  // FreeFonts. Include access to the 48 Adafruit_GFX free fonts FF1 to FF48 and custom fonts
+//#define LOAD_GFXFF  // FreeFonts. Include access to the 48 Adafruit_GFX free fonts FF1 to FF48 and custom fonts
 
 // Comment out the #define below to stop the SPIFFS filing system and smooth font code being loaded
 // this will save ~20kbytes of FLASH
-#define SMOOTH_FONT
+//#define SMOOTH_FONT
 
 
 // ##################################################################################
