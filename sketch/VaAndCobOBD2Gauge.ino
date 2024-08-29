@@ -17,7 +17,7 @@ Important Note:
 //#define SERIAL_DEBUG //to show data in serial port
 //#define SKIP_CONNECTION //skip elm327 BT connection to view meter
 //#define TEST_DTC //test DTC
-
+//#define FORD_T5
 
 //Intermal temperature sensor function declaration
 #ifdef __cplusplus
@@ -82,9 +82,17 @@ const String pidConfig[7][9] = {
   { "MAP", "psi", "010B", "0", "0", "40", "0", "1", "35" },         //2 = 010B
   { "ENG Speed", "rpm", "010C", "3", "0", "5000", "0", "0", "4000" }, //3 = 010C
   { "PCM Volt", "volt", "0142", "4", "0", "16", "1", "1", "15" },   //4 = 0142
+#ifdef FORD_T5  
+   { "IAT", "`C", "010F", "1", "0", "120", "3", "0", "99" },    //5 = 015C
+#else
   { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0", "99" },    //5 = 015C
-  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C for FORD T6
-  //{ "Trans Temp", "`C", "221674", "6", "0", "120", "3", "1", "99" } //6 = 221674 for FORD T5
+#endif
+#ifdef FORD_T5
+  { "Trans Temp", "`C", "221674", "5", "0", "120", "3", "1", "99" } //6 = 221674 for FORD T5
+#else
+  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C
+#endif
+
 };
 
 //barometric pressure "0133"  turbo boost = map - bp;
@@ -226,7 +234,7 @@ void Terminal(String texts,uint16_t x,uint16_t y,uint16_t w,uint16_t h) {
    bt_message = "";//reset bt message   
 } 
 /*------------------*/
-/*
+
 void checkGenuine() {//check if genuine obd2 gauge - must flash "gauge_factory_init.ino" first
 //security {serialno: "V&C-OBDII-001"}
   pref.begin("security", true);//read only
@@ -250,7 +258,7 @@ void checkGenuine() {//check if genuine obd2 gauge - must flash "gauge_factory_i
   }
 }
 //----------------------------------------------
-*/
+
 //---- Include Header File --------------------
 //#include "image.h"
 #include "bluetooth.h"
@@ -289,22 +297,23 @@ void setup() {
   Serial.print(F("by Ratthanin W. BUILD -> "));
   Serial.println(compile_date);
 
+
+ 
   //init TFT display
   tft.init();
   tft.setRotation(1);//landcape 
-
-  //Initialize the VSPI bus for touchscreen
-  vspi = new SPIClass(VSPI);
-  vspi->begin(TOUCH_CLK, TOUCH_MISO, TOUCH_MOSI, TOUCH_CS);
-  ts.begin(*vspi);  // Initialize the touch screen with the custom SPI instance
+// Start the SPI for the touchscreen and init the touchscreen
+  touchscreenSPI.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  ts.begin(touchscreenSPI);
   ts.setRotation(1);
+
   touch_calibrate();//hold button at start to calibrate touch
   //testTouch();//test touchscreen
   
   tft.setSwapBytes(true);//to display correct image color
-  //tft.pushImage(0,0,320,240,vaandcob);//show logo
-  tft.pushImage(135,100,100,50,futurecar);
-  //delay(3000);
+  show_spiffs_jpeg_image("/vaandcob.jpg",0,0);
+  delay(3000);
+
   //backlight ledcAttachPin must be set after tft.init()
   ledcAttachPin(TFT_BL, backlightChannel);//attach backlight
   for (uint8_t i=255;i>0;i--) {//fading effect
@@ -323,7 +332,7 @@ void setup() {
   tft.setTextColor(TFT_WHITE,TFT_BLUE);
   tft.drawString(txt,0,26,2);
   
-  //checkGenuine();//check guniune
+  checkGenuine();//check guniune
 //init variable
   pref.begin("setting", false);
  /* Create a namespace called "setting" with read/write mode
