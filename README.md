@@ -47,4 +47,4 @@ buy here  https://s.click.aliexpress.com/e/_DB8Ht8N
 - Firmware updatable (micro SDcard and WiFi)
 - VIN Read on the About page.
 
-# [☕ Buy me coffee]buymeacoffee.com/vaandcob
+# [☕ Buy me coffee](buymeacoffee.com/vaandcob)
