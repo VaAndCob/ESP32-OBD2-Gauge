@@ -16,7 +16,7 @@ This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
 
 ## Hardware
 - ESP32 TFT2.8 320x240 with "RESISTIVE" touch board.
-buy here  https://s.click.aliexpress.com/e/_DB8Ht8N
+buy here  https://s.click.aliexpress.com/e/_Ew95gMl 
 - ELM327 Bluetooth adaptor (recommended v1.5 not v2.1)
   Highly recommend ELM327 Bluetooth  adaptor https://s.click.aliexpress.com/e/_oo3THvG
 - A small speaker for mobile phone 1Watt
