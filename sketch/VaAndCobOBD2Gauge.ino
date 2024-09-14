@@ -17,7 +17,8 @@ Important Note:
 //#define SERIAL_DEBUG //to show data in serial port
 //#define SKIP_CONNECTION //skip elm327 BT connection to view meter
 //#define TEST_DTC //test DTC
-//#define FORD_T5
+
+//#define FORD_T5 for ford T5 only
 
 //Intermal temperature sensor function declaration
 #ifdef __cplusplus
@@ -78,9 +79,9 @@ warn = default warning value
 const String pidConfig[7][9] = {
   //[pid][data]
   { "ENG Load", "%", "0104", "2", "0", "100", "0", "0", "80" },     //0 = 0104
-  { "Coolant", "`C", "0105", "1", "0", "120", "3", "0", "99" },     //1 = 0105
+  { "ECT", "`C", "0105", "1", "0", "120", "3", "0", "99" },     //1 = 0105
   { "MAP", "psi", "010B", "0", "0", "40", "0", "1", "35" },         //2 = 010B
-  { "ENG Speed", "rpm", "010C", "3", "0", "5000", "0", "0", "4000" }, //3 = 010C
+  { "ENG SPD", "rpm", "010C", "3", "0", "5000", "0", "0", "4000" }, //3 = 010C
   { "PCM Volt", "volt", "0142", "4", "0", "16", "1", "1", "15" },   //4 = 0142
 #ifdef FORD_T5  
    { "IAT", "`C", "010F", "1", "0", "120", "3", "0", "99" },    //5 = 015C
@@ -88,9 +89,9 @@ const String pidConfig[7][9] = {
   { "Oil Temp", "`C", "015C", "1", "0", "120", "3", "0", "99" },    //5 = 015C
 #endif
 #ifdef FORD_T5
-  { "Trans Temp", "`C", "221674", "5", "0", "120", "3", "1", "99" } //6 = 221674 for FORD T5
+  { "TFT", "`C", "221674", "6", "0", "120", "3", "0", "99" } //6 = 221674 for FORD T5
 #else
-  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C
+  { "Trans Temp", "`C", "221E1C", "5", "0", "120", "3", "1", "99" } //6 = 221E1C for FORD T6+
 #endif
 
 };

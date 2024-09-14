@@ -458,11 +458,20 @@ void updateMeter(uint8_t pidNo, String response) {  //update parameter on screen
     case 2: data = A * 100.0 / 255; break;
     case 3: data = (256 * A + B) / 4.0; break;
     case 4: data = (256 * A + B) / 1000.0; break;
-    case 5: data = (256 * A + B) / 16.0; break;
-    case 6: data = (256 * A + B) / 8.0; break;
+    case 5: 
+      data = (256 * A + B) / 16.0; 
+      if (data >150 || data <0) data = old_data[pidIndex];//check if data is outbound use old data
+      break;
+    
+    case 6: 
+      data = (A*256+B)*5/72-18;
+      if (data >150 || data <0) data = old_data[pidIndex];//check if data is outbound use old data
+      break;
+    
       //more formula
   }  //switch fomula
 
+  
   switch (layout) {
     case 0:
       {  //6 meter
