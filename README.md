@@ -20,10 +20,9 @@ This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
 buy here  https://s.click.aliexpress.com/e/_Ew95gMl 
 - ELM327 Bluetooth adaptor (recommended v1.5 not v2.1)
   Highly recommend ELM327 Bluetooth  adaptor https://s.click.aliexpress.com/e/_oo3THvG
-- A small speaker for mobile phone 1Watt
+- A small speaker for mobile phone 1 Watt 8 ohm 9x28 mmm.
 - A push button 6x6x5 2 legs
 - 3d print enclosure
-
 - 12v to 5v dc micro usb power regulator module
 - Gauge magnetic stand
 
