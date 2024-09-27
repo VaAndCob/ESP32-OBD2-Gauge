@@ -9,6 +9,7 @@ This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
  - 
 ![](/picture/page.jpg)
 ![](/picture/config.jpg)
+![](enclosure/enclosure.jpg)
 
 ## Software:
 - Arduino IDE 2.3.2 + ESP32 arduino core 2.0.17
@@ -21,7 +22,7 @@ buy here  https://s.click.aliexpress.com/e/_Ew95gMl
   Highly recommend ELM327 Bluetooth  adaptor https://s.click.aliexpress.com/e/_oo3THvG
 - A small speaker for mobile phone 1Watt
 - A push button 6x6x5 2 legs
-- Aluminium Case Cover/Plastic Enclosure
+- 3d print enclosure
 
 - 12v to 5v dc micro usb power regulator module
 - Gauge magnetic stand
