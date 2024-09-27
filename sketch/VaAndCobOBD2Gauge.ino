@@ -18,7 +18,8 @@ Important Note:
 //#define SKIP_CONNECTION //skip elm327 BT connection to view meter
 //#define TEST_DTC //test DTC
 
-//#define FORD_T5 for ford T5 only
+// FOR FORD T5 uncomment this line
+//#define FORD_T5 
 
 //Intermal temperature sensor function declaration
 #ifdef __cplusplus
@@ -333,7 +334,7 @@ void setup() {
   tft.setTextColor(TFT_WHITE,TFT_BLUE);
   tft.drawString(txt,0,26,2);
   
-  checkGenuine();//check guniune
+ // checkGenuine();//check guniune
 //init variable
   pref.begin("setting", false);
  /* Create a namespace called "setting" with read/write mode

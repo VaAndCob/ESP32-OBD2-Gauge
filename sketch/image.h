@@ -74,23 +74,37 @@ void jpegRender(int xpos, int ypos) {
 }
 
 /*-------show jpg image at x, y -----*/
- void show_spiffs_jpeg_image(String filename, int x, int y) {
-    //load mypic.jpg from spiffs to show on screen
-   if (!SPIFFS.begin(true)) {
-     Serial.println("Error: SPIFFS failed!");
-     tft.setTextColor(TFT_WHITE,TFT_RED);
-     tft.drawCentreString("Error: SPIFFS failed!",159,95,4); 
-   } else {  
-     File imageFile = SPIFFS.open(filename);
-     bool decoded = JpegDec.decodeSdFile(imageFile);
-     if (decoded) {
-       jpegRender(x, y);//show image onto the screen at given coordinates
-     }
-  imageFile.close();         
-  SPIFFS.end();
+void show_spiffs_jpeg_image(String filename, int x, int y) {
+  // Load mypic.jpg from SPIFFS to show on screen
+  if (!SPIFFS.begin(true)) {
+    Serial.println("Error: SPIFFS failed!");
+    tft.setTextColor(TFT_WHITE, TFT_RED);
+    tft.drawCentreString("Error: SPIFFS failed!", 159, 95, 4); 
+    return;
+  } 
+  if (!SPIFFS.exists(filename)) {
+    Serial.println("Error: File not found!");
+    tft.setTextColor(TFT_WHITE, TFT_RED);
+    tft.drawCentreString("Error: File not found!", 159, 95, 4);
+    SPIFFS.end();
+    return;
+  }
+    
+    File imageFile = SPIFFS.open(filename);
+    bool decoded = JpegDec.decodeSdFile(imageFile);
+    if (decoded) {
+      jpegRender(x, y);  // Show image onto the screen at given coordinates
+    } else {
+      Serial.println("Error: Failed to decode image!");
+      tft.setTextColor(TFT_WHITE, TFT_RED);
+      tft.drawCentreString("Error: Failed to decode image!", 159, 95, 4);
+    }
+    
+    imageFile.close();
+    SPIFFS.end();
   
-   }
- }
+}
+
 
 //---------------------------------------------
 //Image byte array

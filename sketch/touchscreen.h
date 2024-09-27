@@ -1,16 +1,18 @@
+
 #include <XPT2046_Touchscreen.h>
 
-#define TOUCH_CS 33  
-#define TOUCH_MOSI 32
-#define TOUCH_MISO 39
-#define TOUCH_CLK 25
-//#define TOUCH_IRQ  36
 
-XPT2046_Touchscreen ts(TOUCH_CS);  // Param 2 - NULL - No interrupts
-//XPT2046_Touchscreen ts(TOUCH_CS, 255);  // Param 2 - 255 - No interrupts
-//XPT2046_Touchscreen ts(TOUCH_CS, TOUCH_IRQ);  // Param 2 - Touch IRQ Pin - interrupt enabled polling
+// Touchscreen pins
+#define XPT2046_IRQ 36   // T_IRQ
+#define XPT2046_MOSI 32  // T_DIN
+#define XPT2046_MISO 39  // T_OUT
+#define XPT2046_CLK 25   // T_CLK
+#define XPT2046_CS 33    // T_CS
 
-SPIClass *vspi = NULL;// Declare a pointer to SPIClass
+SPIClass touchscreenSPI = SPIClass(VSPI);
+XPT2046_Touchscreen ts(XPT2046_CS, XPT2046_IRQ);
+
+#define TFT_GREY 0x5AEB
 
 #define _height 240
 #define _width 320
