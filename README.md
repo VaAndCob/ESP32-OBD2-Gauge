@@ -13,6 +13,7 @@ This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
 
 ## Software:
 - Arduino IDE 2.3.2 + ESP32 arduino core 2.0.17
+- * IMPORTANT * this project won't work with ESP32 arduiino core 3.x.x
 - modified TFT_eSPI library 2.5.43
 
 ## Hardware
