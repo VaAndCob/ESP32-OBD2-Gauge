@@ -14,10 +14,10 @@ How to flash ESP32 with web flasher
 
 1. goto https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
 2. enter offset / upload file as following
+   
+- 0x1000	bootloader.bin
+- 0x8000  partition.bin
+- 0xE000  boot_app0.bin
+- 0x10000  vaandcobobd2gauge.bin (version you want to use)
 
-0x1000	bootloader.biin
-0x8000  partition.bin
-0xE000  boot_app0.bin
-0x10000  vaandcobobd2gauge.bin (version you want to use)
-
-3. Click Program and wait until flashing done.
+4. Click Program and wait until flashing done.
