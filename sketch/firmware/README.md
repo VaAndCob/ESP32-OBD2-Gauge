@@ -21,3 +21,5 @@ How to flash ESP32 with web flasher
 - 0x10000  vaandcobobd2gauge.bin (version you want to use)
 
 4. Click Program and wait until flashing done.
+
+https://github.com/VaAndCob/ESP32-OBD2-Gauge/blob/main/sketch/firmware/offset.png
