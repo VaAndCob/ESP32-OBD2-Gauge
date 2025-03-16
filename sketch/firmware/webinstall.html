@@ -22,16 +22,10 @@
             flex-direction: column;
             height: 100vh;
             font-size: 16px;
+            color: white;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            color: white;
-            text-shadow: 0 0 8px rgba(255, 165, 0, 0.8),
-                0 0 15px rgba(255, 165, 0, 0.6),
-                0 0 20px rgba(255, 140, 0, 0.4);
-        }
+    
 
         #main {
             display: flex;
@@ -41,6 +35,7 @@
             padding: 20px;
             background-color: lightgray;
             border-radius: 20px;
+            color: black;
         }
 
    
@@ -137,13 +132,17 @@
 </head>
 
 <body>
-    <h1>
-        Va&Cob OBD2 Gague Web Flasher
-    </h1>
+    <div>
+    * Google Chrome only
+    * Plug USB to CYD
+    * Choose firmware
+    * Click Flash to install firmware
+    </div><br>
     <div id="main">
+        
         <fieldset>
             <legend>Select firmware</legend>
-            <form id="select-device">
+            <form id="select-firmware">
              
                 <input type="radio" id="device1" name="device" value="T5" style="margin: 20px"
                     onclick="setManifest('T5')" checked />
@@ -153,18 +152,13 @@
                 <label for="device2">Ford T6</label><br />
             </form>
             <hr>
-            <br>
+  
             <esp-web-install-button manifest="t5_manifest.json" id="init-button">
                 <button slot="activate" style="margin-top: 30px;background-color: green">
                     Flash</button>
                 <span slot="unsupported">Your browser doesn't support!</span>
                 <span slot="not-allowed">Not support HTTP!</span>
             </esp-web-install-button>
-
-
-      
-       
-          
             <div class="terminal-container">
                 <textarea readonly id="terminal"></textarea>
             </div>
@@ -172,8 +166,6 @@
     </div>
 
 
-    <script src="https://cdn.rawgit.com/cozmo/jsQR/master/dist/jsQR.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="/webserial/install-button.js?module"></script>
 
 
