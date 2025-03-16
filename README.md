@@ -2,7 +2,7 @@
 A fully functional code-updated
 Last Update: September 27th, 2024
 
-This is ESP32 OBD2 Gauge for vehicles that are compatible with obd2
+This is an ESP32 OBD2 Gauge for vehicles that are compatible with obd2
 (Special made for FORD vehicle)
  - Prototype https://youtu.be/PkQaUJbzTNM
  - Current Model Short Demo https://youtu.be/vvBIeim7XTE
@@ -47,5 +47,7 @@ buy here  https://s.click.aliexpress.com/e/_Ew95gMl
 - Change off screen to user screen with micro SDcard
 - Firmware updatable (micro SDcard and WiFi)
 - VIN Read on the About page.
+
+* You can flash firmware directly to ESP32 here -> https://vaandcob.github.io/ESP32-OBD2-Gauge/sketch/firmware/webinstall.html
 
 ## [☕ Buy me coffee](buymeacoffee.com/vaandcob)
