@@ -133,10 +133,10 @@
 
 <body>
     <div>
-    * Google Chrome only
-    * Plug USB to CYD
-    * Choose firmware
-    * Click Flash to install firmware
+    1. Google Chrome only<br>
+    2. Plug USB to CYD<br>
+    3. Choose firmware<br>
+    4. Click Flash to install firmware<br>
     </div><br>
     <div id="main">
         
@@ -146,14 +146,14 @@
              
                 <input type="radio" id="device1" name="device" value="T5" style="margin: 20px"
                     onclick="setManifest('T5')" checked />
-                <label for="device1">Ford T5</label><br />
+                <label for="device1">Ford T5</label><br>
                 <input type="radio" id="device2" name="device" value="T6" style="margin: 20px"
                     onclick="setManifest('T6')" />
-                <label for="device2">Ford T6</label><br />
+                <label for="device2">Ford T6</label>
             </form>
             <hr>
   
-            <esp-web-install-button manifest="t5_manifest.json" id="init-button">
+            <esp-web-install-button manifest="T5_manifest.json" id="init-button">
                 <button slot="activate" style="margin-top: 30px;background-color: green">
                     Flash</button><br>
                 <span slot="unsupported">Your browser doesn't support!</span><br>
