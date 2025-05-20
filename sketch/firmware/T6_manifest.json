@@ -7,10 +7,10 @@
       {
         "chipFamily": "ESP32",
         "parts": [
-          { "path": "https://raw.githubusercontent.com/VaAndCob/ESP32-OBD2-Gauge/main/sketch/firmware/bootloader.bin", "offset": 4096 },
-          { "path": "https://raw.githubusercontent.com/VaAndCob/ESP32-OBD2-Gauge/main/sketch/firmware/partitions.bin", "offset": 32768 },
-          { "path": "https://raw.githubusercontent.com/VaAndCob/ESP32-OBD2-Gauge/main/sketch/firmware/boot_app0.bin", "offset": 57344 },
-          { "path": "https://raw.githubusercontent.com/VaAndCob/ESP32-OBD2-Gauge/main/sketch/firmware/VaAndCobOBD2Gauge_T6_nogenuine.bin", "offset": 65536 }
+          { "path": "bootloader.bin", "offset": 4096 },
+          { "path": "partitions.bin", "offset": 32768 },
+          { "path": "boot_app0.bin", "offset": 57344 },
+          { "path": "VaAndCobOBD2Gauge_T6_nogenuine.bin", "offset": 65536 }
         ]
       }
     ]
