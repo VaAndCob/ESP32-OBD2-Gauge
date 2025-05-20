@@ -49,7 +49,7 @@ buy here  https://s.click.aliexpress.com/e/_Ew95gMl
 - VIN Read on the About page.
 
 ## You can flash firmware directly to ESP32 here
-https://vaandcob.github.io/webpage/webflasher.html
+https://vaandcob.github.io/webpage/src/index.html
 
 https://vaandcob.github.io/ESP32-OBD2-Gauge/sketch/firmware/webinstall.html
 
