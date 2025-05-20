@@ -11,4 +11,4 @@ there are 3 compiled firmware version
 
 ----------------------------------------
 You can flash firmware with web flasher tool -> 
-https://vaandcob.github.io/webflasher/flasher/webflasher.html
+https://vaandcob.github.io/webpage/webflasher.html
